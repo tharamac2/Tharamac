@@ -1,1 +1,1 @@
-export const API_BASE = 'http://YOUR_API_HOST:4000/api'; // <- replace with your backend (https recommended)
+export const API_BASE = 'http://192.168.0.11:5000/api'; // <- replace with your backend (https recommended)
