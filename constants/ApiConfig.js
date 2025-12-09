@@ -1,0 +1,1 @@
+export const API_BASE = 'http://YOUR_API_HOST:4000/api'; // <- replace with your backend (https recommended)
