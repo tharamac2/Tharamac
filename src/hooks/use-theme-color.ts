@@ -1,26 +1,29 @@
 import { useColorScheme } from "react-native";
 
+type ColorName = "text" | "background";
+type Theme = "light" | "dark";
+
 export function useThemeColor(
   props: { light?: string; dark?: string },
-  colorName: string
+  colorName: ColorName
 ) {
-  const theme = useColorScheme();
-  const colorFromProps = props[theme ?? "light"];
+  const theme: Theme = useColorScheme() as Theme;
+  const colorFromProps = props[theme];
 
   if (colorFromProps) {
     return colorFromProps;
   }
 
-  const Colors = {
+  const Colors: Record<Theme, Record<ColorName, string>> = {
     light: {
-      text: "#000",
-      background: "#fff",
+      text: "#000000",
+      background: "#ffffff",
     },
     dark: {
-      text: "#fff",
-      background: "#000",
+      text: "#ffffff",
+      background: "#000000",
     },
   };
 
-  return Colors[theme ?? "light"][colorName];
+  return Colors[theme][colorName];
 }
