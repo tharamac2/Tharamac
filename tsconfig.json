@@ -4,8 +4,8 @@
     "strict": true,
     "baseUrl": "./",
     "paths": {
-      "@/*": ["./*"],
-      "@src/*": ["src/*"]
+      "@/*": ["src/*"],          // ✅ Points to src/ for components, hooks, etc.
+      "@constants/*": ["constants/*"]  // ✅ New alias for root-level constants
     }
   },
   "include": [
