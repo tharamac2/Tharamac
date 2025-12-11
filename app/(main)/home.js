@@ -1,336 +1,426 @@
-import { useRouter } from 'expo-router';
-import { useMemo, useState } from 'react'; // Added useMemo for efficient filtering
+import React from 'react';
 import {
+  Dimensions,
+  FlatList,
   Image,
+  PixelRatio,
   SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
-  View
+  View,
 } from 'react-native';
-import Colors from '../../constants/Colors';
+// You must have installed these packages: expo install @expo/vector-icons
+import { FontAwesome, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 
-// Placeholder data for categories
-const CATEGORIES = [
-    { id: 1, name: 'All' },
-    { id: 2, name: 'Business' },
-    { id: 3, name: 'Festivals' },
-    { id: 4, name: 'Daily Quotes' },
-    { id: 5, name: 'Offers' },
+// --- 1. LOCAL COLOR DEFINITIONS ---
+const Colors = {
+    primary: '#007AFF',       // Blue
+    secondary: '#1A237E',     // Dark Blue for Header
+    accent: '#4CAF50',        // Green
+    warning: '#FFC107',       // Yellow
+    danger: '#DC3545',        // Red
+    white: '#FFFFFF',
+    black: '#000000',
+    text: '#333333',
+    textLight: '#999999',
+    whatsappGreen: '#4CAF50',
+    border: '#E0E0E0',
+    lightGrey: '#F8F8F8',
+};
+
+// --- 2. GLOBAL DIMENSIONS ---
+const { width } = Dimensions.get('window');
+const scale = size => size * PixelRatio.getFontScale();
+
+// --- 3. DUMMY DATA ---
+
+// Grid Menu Data (From your request)
+const MODULES = [
+    { id: 'lead', title: 'Lead Extractor', icon: 'server-network-outline', type: 'MaterialCommunityIcons', route: 'lead-extractor' },
+    { id: 'poster', title: 'Personalized Poster', icon: 'palette-outline', type: 'Ionicons', route: 'poster-tool' },
+    { id: 'hisab', title: 'Apna Hisab', icon: 'calculator-outline', type: 'Ionicons', route: 'hisab-tool' },
+    { id: 'greetings', title: 'Greetings', icon: 'volume-high-outline', type: 'Ionicons', route: 'greetings-tool' },
+    { id: 'video', title: 'Video', icon: 'videocam-outline', type: 'Ionicons', route: 'video-tool' },
+    { id: 'training', title: 'Training', icon: 'megaphone-outline', type: 'Ionicons', route: 'training-tool' },
+    { id: 'frames', title: 'Frames', icon: 'crop-free', type: 'MaterialCommunityIcons', route: 'frames-tool' },
+    { id: 'congrats', title: 'Congrats', icon: 'medal-outline', type: 'Ionicons', route: 'congrats-tool' },
+    { id: 'invitation', title: 'Invitation', icon: 'mail-outline', type: 'Ionicons', route: 'invitation-tool' },
+    { id: 'certificate', title: 'Certificate', icon: 'certificate-outline', type: 'MaterialCommunityIcons', route: 'certificate-tool' },
+    { id: 'registration', title: 'Registration', icon: 'tablet-cellphone', type: 'MaterialCommunityIcons', route: 'registration-tool' },
+    { id: 'reports', title: 'Reports', icon: 'chart-bar', type: 'FontAwesome', route: 'reports-tool' },
+    { id: 'faq', title: 'FAQ', icon: 'help-circle-outline', type: 'Ionicons', route: 'faq-page' },
+    { id: 'settings', title: 'Settings', icon: 'cog-outline', type: 'Ionicons', route: 'settings-page' },
 ];
 
-// Placeholder data for templates (Added category property for filtering)
-const FEATURED_TEMPLATES_DATA = [
-    { id: 1, title: 'Mega Sale', category: 'Offers', image: 'https://via.placeholder.com/300x300/6C63FF/FFFFFF?text=Sale' },
-    { id: 2, title: 'Diwali Wish', category: 'Festivals', image: 'https://via.placeholder.com/300x300/FF6347/FFFFFF?text=Diwali' },
-    { id: 3, title: 'Morning Quote', category: 'Daily Quotes', image: 'https://via.placeholder.com/300x300/4CAF50/FFFFFF?text=Quote' },
-    { id: 4, title: 'Hiring Now', category: 'Business', image: 'https://via.placeholder.com/300x300/FFC107/000000?text=Hiring' },
-    { id: 5, title: 'Summer Offer', category: 'Offers', image: 'https://via.placeholder.com/300x300/17A2B8/FFFFFF?text=Summer' },
-    { id: 6, title: 'Christmas Day', category: 'Festivals', image: 'https://via.placeholder.com/300x300/DC3545/FFFFFF?text=Christmas' },
+// Mock Feed Data
+const FEED_ITEMS = [
+    { id: 1, title: 'Mega Diwali Offer', date: '29 Aug', type: 'Festival', image: 'https://via.placeholder.com/150x150/FF6347/FFFFFF?text=Diwali' },
+    { id: 2, title: 'Weekly Business Tips', date: '28 Aug', type: 'Business', image: 'https://via.placeholder.com/150x150/4CAF50/FFFFFF?text=Business' },
+    { id: 3, title: 'Upcoming Webinar Invitation', date: '27 Aug', type: 'Event', image: 'https://via.placeholder.com/150x150/6C63FF/FFFFFF?text=Webinar' },
+    { id: 4, title: 'New Policy Update', date: '26 Aug', type: 'Update', image: 'https://via.placeholder.com/150x150/FFC107/000000?text=Policy' },
+    { id: 5, title: 'Happy Holi Greetings', date: '25 Aug', type: 'Festival', image: 'https://via.placeholder.com/150x150/17A2B8/FFFFFF?text=Holi' },
+    { id: 6, title: 'Client Success Story', date: '24 Aug', type: 'Success', image: 'https://via.placeholder.com/150x150/DC3545/FFFFFF?text=Success' },
 ];
 
-export default function HomeScreen() {
-    const router = useRouter();
-    const [activeCategory, setActiveCategory] = useState('All');
-    const [searchText, setSearchText] = useState(''); // New state for search input
+// Mock Statistics Data
+const STATS_DATA = [
+    { title: 'Total Leads', value: '4,521', icon: 'person-add', color: Colors.primary },
+    { title: 'Posters Created', value: '8,901', icon: 'image', color: Colors.accent },
+    { title: 'Training Views', value: '1,204', icon: 'video', color: Colors.warning },
+    { title: 'Certificates Issued', value: '450', icon: 'medal', color: Colors.secondary },
+];
 
-    const handleTemplatePress = (id) => {
-        router.push(`/(editor)/${id}`);
+// --- 4. SUB-COMPONENTS ---
+
+// Grid Item Component (for the 3xN menu)
+const GridItem = React.memo(({ title, icon, type, onPress }) => {
+    const IconComponent = type === 'Ionicons' ? Ionicons : (type === 'MaterialCommunityIcons' ? MaterialCommunityIcons : FontAwesome);
+
+    return (
+        <TouchableOpacity style={styles.card} onPress={onPress}>
+            <View style={styles.iconContainer}>
+                <IconComponent 
+                    name={icon} 
+                    size={scale(35)} 
+                    color={Colors.primary} 
+                />
+            </View>
+            <Text style={styles.cardTitle}>{title}</Text>
+        </TouchableOpacity>
+    );
+});
+
+// Mock Analytics/Stats Card Component
+const StatCard = React.memo(({ title, value, icon, color }) => (
+    <View style={[styles.statCard, { borderLeftColor: color }]}>
+        <View>
+            <Text style={styles.statValue}>{value}</Text>
+            <Text style={styles.statTitle}>{title}</Text>
+        </View>
+        <FontAwesome name={icon} size={scale(24)} color={color} />
+    </View>
+));
+
+// Feed Item Component (for the vertical list at the bottom)
+const FeedItem = React.memo(({ item }) => (
+    <View style={styles.feedItem}>
+        <Image source={{ uri: item.image }} style={styles.feedImage} />
+        <View style={styles.feedContent}>
+            <Text style={styles.feedTitle} numberOfLines={2}>{item.title}</Text>
+            <View style={styles.feedFooter}>
+                <Text style={styles.feedDate}>{item.date}</Text>
+                <View style={[styles.feedTypeChip, { backgroundColor: item.type === 'Festival' ? Colors.danger : Colors.accent }]}>
+                    <Text style={styles.feedTypeChipText}>{item.type}</Text>
+                </View>
+            </View>
+        </View>
+        <Ionicons name="chevron-forward-outline" size={scale(18)} color={Colors.textLight} />
+    </View>
+));
+
+// --- 5. MAIN SCREEN COMPONENT ---
+export default function MegaUIScreen({ navigation }) { // Passing navigation mock for internal use
+    const handleModulePress = (route) => {
+        console.log(`Navigating to: ${route}`);
+        // In a real Expo Router app, you'd use: router.push(`/(main)/${route}`);
     };
 
-    // --- Core Filtering Logic using useMemo ---
-    const filteredTemplates = useMemo(() => {
-        let templates = FEATURED_TEMPLATES_DATA;
+    const renderFeedItem = ({ item }) => <FeedItem item={item} />;
 
-        // 1. Filter by Category
-        if (activeCategory !== 'All') {
-            templates = templates.filter(
-                (template) => template.category === activeCategory
-            );
-        }
-
-        // 2. Filter by Search Text
-        if (searchText) {
-            const lowerSearch = searchText.toLowerCase();
-            templates = templates.filter(
-                (template) => 
-                    template.title.toLowerCase().includes(lowerSearch) ||
-                    template.category.toLowerCase().includes(lowerSearch)
-            );
-        }
-
-        return templates;
-    }, [activeCategory, searchText]); // Recalculate only when category or search text changes
-
-    // --- Template Change Handler ---
-    const handleCategoryChange = (categoryName) => {
-        setActiveCategory(categoryName);
-        // Optional: Clear search when changing categories
-        // setSearchText(''); 
-    };
-    
-    // --- Render Logic ---
     return (
         <SafeAreaView style={styles.container}>
-            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+            <ScrollView contentContainerStyle={styles.scrollContent}>
                 
-                {/* Header Section (Unchanged) */}
+                {/* --- A. HEADER SECTION (Your requested style) --- */}
                 <View style={styles.header}>
-                    <View>
-                        <Text style={styles.greeting}>Hello, User!</Text>
-                        <Text style={styles.brandName}>Tharamac</Text>
+                    <Text style={styles.brandName}>Agent Saathi</Text>
+                    <View style={styles.headerRight}>
+                        <Text style={styles.language}>ENGLISH</Text>
+                        <Ionicons name="caret-down-outline" size={scale(14)} color={Colors.white} style={{ marginLeft: 4 }} />
+                        <TouchableOpacity style={{ marginLeft: 15 }}><Ionicons name="logo-whatsapp" size={scale(24)} color={Colors.whatsappGreen} /></TouchableOpacity>
+                        <TouchableOpacity style={{ marginLeft: 15 }}><Ionicons name="person-circle-outline" size={scale(28)} color={Colors.white} /></TouchableOpacity>
                     </View>
-                    <TouchableOpacity onPress={() => router.push('/(main)/profile')}>
-                        <View style={styles.profileIcon}>
-                            <Text style={styles.profileInitials}>U</Text>
-                        </View>
+                </View>
+                
+                {/* --- B. STATUS/VIDEO SECTION (Your requested style) --- */}
+                <View style={styles.topSection}>
+                    <Text style={styles.topSectionText}>Today Status Videos</Text>
+                    <TouchableOpacity>
+                        <Text style={styles.viewAllText}>View All</Text>
                     </TouchableOpacity>
                 </View>
 
-                {/* Search Bar (Updated with value and onChangeText) */}
-                <View style={styles.searchContainer}>
-                    <TextInput 
-                        placeholder="Search templates (e.g., Offer, Monday)..." 
-                        placeholderTextColor="#999"
-                        style={styles.searchInput}
-                        value={searchText}
-                        onChangeText={setSearchText} // Updates the searchText state
-                    />
-                </View>
-
-                {/* Banner / Premium Ad (Unchanged) */}
-                <View style={styles.banner}>
-                    <Text style={styles.bannerText}>Unlock Premium Designs</Text>
-                    <Text style={styles.bannerSubText}>Get 5000+ templates for your business.</Text>
-                    <TouchableOpacity style={styles.bannerButton}>
-                        <Text style={styles.bannerButtonText}>Upgrade Now</Text>
-                    </TouchableOpacity>
-                </View>
-
-                {/* Categories (Horizontal Scroll) (Updated with new handler) */}
+                {/* --- C. ANALYTICS/DASHBOARD SECTION --- */}
                 <View style={styles.sectionHeader}>
-                    <Text style={styles.sectionTitle}>Categories</Text>
+                    <Text style={styles.sectionTitle}>Performance Dashboard</Text>
                 </View>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoryScroll}>
-                    {CATEGORIES.map((cat) => (
-                        <TouchableOpacity 
-                            key={cat.id} 
-                            style={[styles.categoryChip, activeCategory === cat.name && styles.categoryChipActive]}
-                            onPress={() => handleCategoryChange(cat.name)} // Uses the new handler
-                        >
-                            <Text style={[styles.categoryText, activeCategory === cat.name && styles.categoryTextActive]}>
-                                {cat.name}
-                            </Text>
-                        </TouchableOpacity>
+                <View style={styles.statsContainer}>
+                    {STATS_DATA.map((stat, index) => (
+                        <StatCard key={index} {...stat} />
                     ))}
-                </ScrollView>
+                </View>
+                
+                <View style={styles.chartPlaceholder}>
+                    <Text style={styles.placeholderText}></Text>
+                </View>
 
-                {/* Featured Templates Grid (Now uses filteredTemplates) */}
+                {/* --- D. GRID MENU SECTION (Your core request) --- */}
+                <View style={[styles.sectionHeader, { marginTop: scale(20) }]}>
+                    <Text style={styles.sectionTitle}>Agent Tools</Text>
+                </View>
+                <View style={styles.gridWrapper}>
+                    <View style={styles.grid}>
+                        {MODULES.map((module) => (
+                            <GridItem 
+                                key={module.id}
+                                title={module.title}
+                                icon={module.icon}
+                                type={module.type}
+                                onPress={() => handleModulePress(module.route)}
+                            />
+                        ))}
+                    </View>
+                </View>
+                
+                {/* --- E. NEWS/FEED LIST SECTION --- */}
                 <View style={styles.sectionHeader}>
-                    <Text style={styles.sectionTitle}>
-                        {activeCategory === 'All' ? 'Featured' : activeCategory} Templates 
-                        ({filteredTemplates.length})
-                    </Text>
-                    <TouchableOpacity onPress={() => router.push('/(main)/templates')}>
-                        <Text style={styles.seeAll}>See All</Text>
+                    <Text style={styles.sectionTitle}>Latest Updates & News</Text>
+                    <TouchableOpacity>
+                        <Text style={styles.viewAllText}>More</Text>
                     </TouchableOpacity>
                 </View>
-
-                <View style={styles.grid}>
-                    {/* Display a message if no templates match the filter */}
-                    {filteredTemplates.length === 0 ? (
-                        <View style={styles.noResultsContainer}>
-                            <Text style={styles.noResultsText}>
-                                No templates found matching "{searchText}" in {activeCategory}.
-                            </Text>
-                        </View>
-                    ) : (
-                        filteredTemplates.map((item) => ( // Mapping over the filtered list
-                            <TouchableOpacity 
-                                key={item.id} 
-                                style={styles.card}
-                                onPress={() => handleTemplatePress(item.id)}
-                            >
-                                <Image source={{ uri: item.image }} style={styles.cardImage} />
-                                <View style={styles.cardFooter}>
-                                    <Text style={styles.cardTitle}>{item.title}</Text>
-                                </View>
-                            </TouchableOpacity>
-                        ))
-                    )}
-                </View>
+                
+                <FlatList
+                    data={FEED_ITEMS}
+                    renderItem={renderFeedItem}
+                    keyExtractor={(item) => item.id.toString()}
+                    scrollEnabled={false} // Since it's inside a ScrollView
+                    ItemSeparatorComponent={() => <View style={styles.separator} />}
+                    contentContainerStyle={styles.feedList}
+                />
+                
+                <View style={{ height: 50 }} /> {/* Final padding for content under tabs */}
 
             </ScrollView>
         </SafeAreaView>
     );
 }
 
-// --- Styles (Added a few styles for No Results) ---
+// --- 6. STYLES ---
+
+// Constants for Grid Calculation
+const GRID_PADDING_H = 40; // Total horizontal padding
+const CARD_MARGIN_H = 20; // Margin between cards
+const CARD_SIZE_W = (width - GRID_PADDING_H - 2 * CARD_MARGIN_H) / 3; 
+
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#F8F9FA',
+        backgroundColor: Colors.lightGrey,
     },
     scrollContent: {
-        paddingBottom: 80,
+        paddingBottom: scale(100), // Extra padding for safe scrolling past the bottom bar
     },
+
+    // A. HEADER STYLES
     header: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        padding: 20,
-        backgroundColor: Colors.white,
-    },
-    greeting: {
-        fontSize: 14,
-        color: Colors.textLight,
+        paddingHorizontal: scale(20),
+        paddingVertical: scale(15),
+        backgroundColor: Colors.secondary,
+        borderBottomWidth: 1,
+        borderBottomColor: Colors.border,
     },
     brandName: {
-        fontSize: 24,
+        fontSize: scale(18),
         fontWeight: 'bold',
-        color: Colors.primary,
+        color: Colors.white,
     },
-    profileIcon: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        backgroundColor: '#EEEEEE',
-        justifyContent: 'center',
+    headerRight: {
+        flexDirection: 'row',
         alignItems: 'center',
     },
-    profileInitials: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: Colors.primary,
-    },
-    searchContainer: {
-        paddingHorizontal: 20,
-        marginBottom: 20,
-        marginTop: 10,
-    },
-    searchInput: {
-        backgroundColor: Colors.white,
-        padding: 12,
-        borderRadius: 10,
-        borderWidth: 1,
-        borderColor: '#E0E0E0',
-        fontSize: 16,
-    },
-    banner: {
-        marginHorizontal: 20,
-        backgroundColor: Colors.secondary,
-        borderRadius: 15,
-        padding: 20,
-        marginBottom: 25,
-    },
-    bannerText: {
-        color: Colors.white,
-        fontSize: 18,
-        fontWeight: 'bold',
-        marginBottom: 5,
-    },
-    bannerSubText: {
-        color: '#CCCCCC',
-        fontSize: 14,
-        marginBottom: 15,
-    },
-    bannerButton: {
-        backgroundColor: Colors.primary,
-        paddingVertical: 8,
-        paddingHorizontal: 15,
-        borderRadius: 8,
-        alignSelf: 'flex-start',
-    },
-    bannerButtonText: {
+    language: {
+        fontSize: scale(14),
         color: Colors.white,
         fontWeight: '600',
-        fontSize: 12,
     },
+
+    // B. STATUS/VIDEO SECTION STYLES
+    topSection: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingHorizontal: scale(20),
+        paddingVertical: scale(12),
+        backgroundColor: Colors.white,
+        borderBottomWidth: 1,
+        borderBottomColor: Colors.border,
+    },
+    topSectionText: {
+        fontSize: scale(16),
+        color: Colors.text,
+        fontWeight: '600',
+    },
+    viewAllText: {
+        fontSize: scale(14),
+        color: Colors.primary,
+        fontWeight: '500',
+    },
+
+    // C. ANALYTICS/DASHBOARD STYLES
     sectionHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        paddingHorizontal: 20,
-        marginBottom: 10,
+        paddingHorizontal: scale(20),
+        marginTop: scale(20),
+        marginBottom: scale(10),
     },
     sectionTitle: {
-        fontSize: 18,
+        fontSize: scale(18),
         fontWeight: 'bold',
         color: Colors.text,
     },
-    seeAll: {
-        color: Colors.primary,
-        fontSize: 14,
-        fontWeight: '600',
+    statsContainer: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        justifyContent: 'space-between',
+        paddingHorizontal: scale(15),
     },
-    categoryScroll: {
-        paddingLeft: 20,
-        marginBottom: 25,
-    },
-    categoryChip: {
+    statCard: {
+        width: '48%',
         backgroundColor: Colors.white,
-        paddingVertical: 8,
-        paddingHorizontal: 16,
-        borderRadius: 20,
-        marginRight: 10,
-        borderWidth: 1,
-        borderColor: '#E0E0E0',
+        padding: scale(15),
+        borderRadius: scale(8),
+        marginBottom: scale(10),
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        borderLeftWidth: scale(5),
+        elevation: 1,
     },
-    categoryChipActive: {
-        backgroundColor: Colors.primary,
-        borderColor: Colors.primary,
-    },
-    categoryText: {
+    statValue: {
+        fontSize: scale(20),
+        fontWeight: 'bold',
         color: Colors.text,
-        fontWeight: '500',
     },
-    categoryTextActive: {
-        color: Colors.white,
+    statTitle: {
+        fontSize: scale(12),
+        color: Colors.textLight,
+        marginTop: scale(4),
+    },
+    chartPlaceholder: {
+        marginHorizontal: scale(20),
+        height: scale(150),
+        backgroundColor: Colors.white,
+        borderRadius: scale(8),
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: Colors.border,
+        marginTop: scale(10),
+    },
+    placeholderText: {
+        color: Colors.textLight,
+        fontStyle: 'italic',
+        fontSize: scale(14),
+    },
+
+    // D. GRID MENU STYLES
+    gridWrapper: {
+        paddingHorizontal: scale(20),
+        paddingVertical: scale(10),
     },
     grid: {
         flexDirection: 'row',
         flexWrap: 'wrap',
-        paddingHorizontal: 15,
         justifyContent: 'space-between',
-    },
-    card: {
-        width: '48%',
-        backgroundColor: Colors.white,
-        borderRadius: 12,
-        marginBottom: 15,
-        overflow: 'hidden',
-        elevation: 3,
-        shadowColor: '#000',
+        backgroundColor: Colors.white, 
+        borderRadius: scale(10),
+        padding: scale(10),
+        elevation: 5, 
+        shadowColor: Colors.black,
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
-        shadowRadius: 4,
+        shadowRadius: 5,
     },
-    cardImage: {
-        width: '100%',
-        height: 150,
-        resizeMode: 'cover',
+    card: {
+        width: CARD_SIZE_W,
+        height: CARD_SIZE_W + scale(20), 
+        marginBottom: scale(20),
+        justifyContent: 'center',
+        alignItems: 'center',
     },
-    cardFooter: {
-        padding: 10,
+    iconContainer: {
+        width: scale(60),
+        height: scale(60),
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: Colors.lightGrey,
+        borderRadius: scale(12),
+        marginBottom: scale(8),
     },
     cardTitle: {
-        fontSize: 14,
-        fontWeight: '600',
+        fontSize: scale(12),
+        textAlign: 'center',
         color: Colors.text,
+        fontWeight: '500',
     },
-    // New styles for no results message
-    noResultsContainer: {
-        flex: 1,
-        width: '100%',
-        padding: 20,
+
+    // E. NEWS/FEED LIST STYLES
+    feedList: {
+        paddingHorizontal: scale(20),
+    },
+    feedItem: {
+        flexDirection: 'row',
+        backgroundColor: Colors.white,
+        paddingVertical: scale(15),
         alignItems: 'center',
+    },
+    feedImage: {
+        width: scale(60),
+        height: scale(60),
+        borderRadius: scale(8),
+        marginRight: scale(15),
+    },
+    feedContent: {
+        flex: 1,
         justifyContent: 'center',
     },
-    noResultsText: {
-        fontSize: 16,
+    feedTitle: {
+        fontSize: scale(15),
+        fontWeight: '600',
+        color: Colors.text,
+        marginBottom: scale(4),
+    },
+    feedFooter: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginTop: scale(2),
+    },
+    feedDate: {
+        fontSize: scale(12),
         color: Colors.textLight,
-        textAlign: 'center',
+        marginRight: scale(10),
+    },
+    feedTypeChip: {
+        paddingHorizontal: scale(8),
+        paddingVertical: scale(3),
+        borderRadius: scale(4),
+    },
+    feedTypeChipText: {
+        fontSize: scale(10),
+        color: Colors.white,
+        fontWeight: 'bold',
+    },
+    separator: {
+        height: 1,
+        backgroundColor: Colors.border,
+        marginHorizontal: scale(20),
     }
 });
