@@ -1,45 +1,70 @@
-import PrimaryButton from '@/components/buttons/PrimaryButton';
-import { useAuth } from '@/context/AuthContext'; // ✅ Import hook
-import Colors from '@constants/Colors';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import {
+  Alert,
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
+} from 'react-native';
+import Colors from '../../constants/Colors';
+import PrimaryButton from '../../src/components/buttons/PrimaryButton';
+// Import the service
+import { registerUser } from '../../src/services/auth.api';
 
 export default function RegisterScreen() {
   const router = useRouter();
-  const { requestOtp, loading, error } = useAuth();  // ✅ Use hook
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [businessName, setBusinessName] = useState('');
-  const [localError, setLocalError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleRegister = async () => {
-    setLocalError('');
-
+    // Basic validation
     if (!name.trim() || !phone.trim() || !businessName.trim()) {
-      setLocalError('Please fill in all fields');
+      Alert.alert('Error', 'Please fill all fields');
       return;
     }
 
+    setIsLoading(true);
+
     try {
-      await requestOtp(phone);  // ✅ Send OTP
-      // Navigate to OTP screen with user data
-      router.push({
-        pathname: '/(auth)/otp',
-        params: { phone, name, businessName }
+      // Call the PHP API
+      // Note: Make sure keys match what your PHP script expects (name, phone, business_name)
+      const response = await registerUser({
+        name: name,
+        phone: phone,
+        business_name: businessName
       });
-    } catch (err) {
-      setLocalError(err.message || 'Failed to send OTP. Please try again.');
+
+      if (response.status === 'success') {
+        // Navigate to OTP on success
+        Alert.alert('Success', 'Account created! Please verify OTP.', [
+          {
+            text: 'OK', 
+            onPress: () => router.push('/(auth)/otp')
+          }
+        ]);
+      } else {
+        Alert.alert('Registration Failed', response.message || 'Unknown error occurred.');
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Something went wrong. Please check your connection.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
+        
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.title}>Create Account</Text>
-          <Text style={styles.subtitle}>Join BrandXpress today.</Text>
+          <Text style={styles.subtitle}>Join Tharamac today.</Text>
         </View>
 
         {/* Form Section */}
@@ -52,7 +77,7 @@ export default function RegisterScreen() {
             placeholderTextColor={Colors.textLight}
             value={name}
             onChangeText={setName}
-            editable={!loading}
+            editable={!isLoading}
           />
 
           {/* Business Name Input */}
@@ -63,39 +88,38 @@ export default function RegisterScreen() {
             placeholderTextColor={Colors.textLight}
             value={businessName}
             onChangeText={setBusinessName}
-            editable={!loading}
+            editable={!isLoading}
           />
 
           {/* Phone Input */}
           <Text style={styles.label}>Mobile Number</Text>
           <TextInput
             style={styles.input}
-            placeholder="+91 XXXXX XXXXX"
+            placeholder="Enter 10-digit mobile number"
             placeholderTextColor={Colors.textLight}
             value={phone}
             onChangeText={setPhone}
-            editable={!loading}
+            editable={!isLoading}
             keyboardType="phone-pad"
+            maxLength={10}
           />
 
-          {(localError || error) && (
-            <Text style={styles.errorText}>{localError || error}</Text>
-          )}
-
-          <PrimaryButton
-            title={loading ? 'Registering...' : 'Continue'}
-            onPress={handleRegister}
-            disabled={loading}
+          <PrimaryButton 
+            title="Get OTP" 
+            onPress={handleRegister} 
+            isLoading={isLoading}
+            style={{ marginTop: 20 }}
           />
         </View>
 
         {/* Footer */}
         <View style={styles.footer}>
-          <Text style={styles.footerText}>Already have an account?{' '}</Text>
+          <Text style={styles.footerText}>Already have an account? </Text>
           <TouchableOpacity onPress={() => router.back()}>
             <Text style={styles.link}>Login</Text>
           </TouchableOpacity>
         </View>
+
       </View>
     </SafeAreaView>
   );
@@ -142,12 +166,6 @@ const styles = StyleSheet.create({
     color: Colors.text,
     borderWidth: 1,
     borderColor: Colors.border,
-  },
-  errorText: {
-    color: '#FF3B30',
-    fontSize: 14,
-    marginTop: 8,
-    marginBottom: 16,
   },
   footer: {
     flexDirection: 'row',

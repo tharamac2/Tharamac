@@ -1,12 +1,23 @@
+// src/components/buttons/PrimaryButton.js
+
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity } from 'react-native';
 import Colors from '../../../constants/Colors';
 
-export default function PrimaryButton({ title, onPress, isLoading = false, style }) {
+export default function PrimaryButton({
+  title,
+  onPress,
+  isLoading = false,
+  disabled = false,
+  style,
+}) {
+  const isDisabled = disabled || isLoading;
+
   return (
-    <TouchableOpacity 
-      style={[styles.button, style]} 
-      onPress={onPress} 
-      disabled={isLoading}
+    <TouchableOpacity
+      style={[styles.button, isDisabled && styles.buttonDisabled, style]}
+      onPress={onPress}
+      activeOpacity={0.8}
+      disabled={isDisabled}
     >
       {isLoading ? (
         <ActivityIndicator color={Colors.white} />
@@ -26,6 +37,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     width: '100%',
     elevation: 2,
+  },
+  buttonDisabled: {
+    opacity: 0.6,
   },
   text: {
     color: Colors.white,

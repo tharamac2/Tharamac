@@ -1,32 +1,41 @@
-import { API_BASE } from '../../constants/ApiConfig'; // ✅ FIXED
-import { fetchJson } from './fetcher';
+// src/services/auth.api.js
 
-export async function requestOtp(mobile) {
-  return await fetchJson(`${API_BASE}/auth/request`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ mobile })
-  });
-}
+// Ensure this path matches where your ApiConfig actually is.
+// If your alias is set up, you can use '@/constants/ApiConfig'
+import { API_BASE } from '../../constants/ApiConfig';
 
-export async function verifyOtp(mobile, otp) {
-  return await fetchJson(`${API_BASE}/auth/verify`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ mobile, otp })
-  });
-}
+export const registerUser = async (userData) => {
+  try {
+    const response = await fetch(`${API_BASE}/register.php`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(userData),
+    });
 
-export async function login(email, password) {
-  return await fetchJson(`${API_BASE}/auth/login`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password })
-  });
-}
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    console.error("Registration API Error:", error);
+    return { status: 'error', message: 'Network request failed' };
+  }
+};
 
-export async function logout() {
-  return await fetchJson(`${API_BASE}/auth/logout`, {
-    method: 'POST'
-  });
-}
+export const loginUser = async (phone) => {
+  try {
+    const response = await fetch(`${API_BASE}/login.php`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ phone: phone }),
+    });
+
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    console.error("Login API Error:", error);
+    return { status: 'error', message: 'Network request failed' };
+  }
+};
