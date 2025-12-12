@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import {
@@ -5,220 +6,226 @@ import {
   Alert,
   Modal,
   SafeAreaView,
+  ScrollView,
+  StatusBar,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View
 } from 'react-native';
-import Colors from '../../constants/Colors';
-import PrimaryButton from '../../src/components/buttons/PrimaryButton';
+// Import API
 import { registerUser } from '../../src/services/auth.api';
 
+// Theme Colors
+const Theme = {
+    primary: '#7C3AED',       
+    primaryDark: '#6D28D9',
+    background: '#7C3AED',    
+    surface: '#FFFFFF',       
+    text: '#1F2937',
+    textLight: '#9CA3AF',
+    inputBg: '#F3F4F6',
+    border: '#E5E7EB',
+};
+
+// ✅ FIX: Define this component OUTSIDE of RegisterScreen
+const InputField = ({ label, placeholder, value, onChangeText, keyboardType, maxLength }) => (
+    <View style={styles.inputGroup}>
+        <Text style={styles.label}>{label}</Text>
+        <View style={styles.inputContainer}>
+            <TextInput
+                style={styles.input}
+                placeholder={placeholder}
+                placeholderTextColor={Theme.textLight}
+                value={value}
+                onChangeText={onChangeText}
+                keyboardType={keyboardType}
+                maxLength={maxLength}
+            />
+        </View>
+    </View>
+);
+
 export default function RegisterScreen() {
-  const router = useRouter();
-  const [name, setName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [businessName, setBusinessName] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [showWelcome, setShowWelcome] = useState(false); // State for overlay
+    const router = useRouter();
+    
+    // State variables
+    const [name, setName] = useState('');                 
+    const [businessName, setBusinessName] = useState(''); 
+    const [phone, setPhone] = useState('');               
+    
+    const [isLoading, setIsLoading] = useState(false);
+    const [showWelcome, setShowWelcome] = useState(false); 
 
-  const handleRegister = async () => {
-    // Basic validation
-    if (!name.trim() || !phone.trim() || !businessName.trim()) {
-      Alert.alert('Error', 'Please fill all fields');
-      return;
-    }
+    const handleRegister = async () => {
+        // Validation
+        if (!name || !businessName || !phone) {
+            Alert.alert('Error', 'Please fill all fields');
+            return;
+        }
 
-    setIsLoading(true);
+        if (phone.length < 10) {
+             Alert.alert('Error', 'Please enter a valid 10-digit mobile number');
+             return;
+        }
 
-    try {
-      // 1. Call the API
-      const response = await registerUser({
-        name: name,
-        phone: phone,
-        business_name: businessName
-      });
+        setIsLoading(true);
 
-      // 2. Check Success
-      if (response.status === 'success') {
-        setIsLoading(false);
-        
-        // 3. Show Welcome Overlay
-        setShowWelcome(true);
+        try {
+            // API Call
+            const response = await registerUser({
+                name: name,
+                business_name: businessName,
+                phone: phone
+            });
 
-        // 4. Wait 3 seconds, then go to Home
-        setTimeout(() => {
-          setShowWelcome(false);
-          router.replace('/(main)/home'); 
-        }, 3000);
-        
-      } else {
-        setIsLoading(false);
-        Alert.alert('Registration Failed', response.message || 'Unknown error occurred.');
-      }
+            setIsLoading(false);
 
-    } catch (error) {
-      setIsLoading(false);
-      // For testing without backend, uncomment the lines below to force success:
-      /*
-      setShowWelcome(true);
-      setTimeout(() => {
-          setShowWelcome(false);
-          router.replace('/(main)/home'); 
-      }, 3000);
-      */
-      Alert.alert('Error', 'Something went wrong. Please check your connection.');
-    }
-  };
+            if (response.status === 'success') {
+                setShowWelcome(true);
+                setTimeout(() => {
+                    setShowWelcome(false);
+                    router.replace('/(main)/home'); 
+                }, 2000);
+            } else {
+                Alert.alert('Registration Failed', response.message || 'Please try again.');
+            }
 
-  return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.content}>
-        
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.title}>Create Account</Text>
-          <Text style={styles.subtitle}>Join Tharamac today.</Text>
-        </View>
+        } catch (error) {
+            setIsLoading(false);
+            Alert.alert('Error', 'Network connection failed.');
+        }
+    };
 
-        {/* Form Section */}
-        <View style={styles.form}>
-          <Text style={styles.label}>Full Name</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Your Name"
-            placeholderTextColor={Colors.textLight}
-            value={name}
-            onChangeText={setName}
-            editable={!isLoading && !showWelcome}
-          />
+    return (
+        <View style={styles.mainContainer}>
+            <StatusBar barStyle="light-content" backgroundColor={Theme.primary} />
+            
+            {/* Header Area */}
+            <SafeAreaView style={styles.headerArea}>
+                <View style={styles.headerContent}>
+                    <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+                         <Ionicons name="arrow-back" size={24} color="#FFF" />
+                    </TouchableOpacity>
+                    <Text style={styles.headerTitle}>Create Account</Text>
+                    <Text style={styles.headerSubtitle}>
+                        Sign up to manage your business, leads, and designs all in one place.
+                    </Text>
+                </View>
+            </SafeAreaView>
 
-          <Text style={styles.label}>Business Name</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Your Business Name"
-            placeholderTextColor={Colors.textLight}
-            value={businessName}
-            onChangeText={setBusinessName}
-            editable={!isLoading && !showWelcome}
-          />
+            {/* Form Sheet */}
+            <View style={styles.sheetContainer}>
+                <ScrollView 
+                    contentContainerStyle={styles.sheetContent} 
+                    showsVerticalScrollIndicator={false}
+                    keyboardShouldPersistTaps="handled" // Helps with keeping focus
+                >
+                    
+                    <InputField 
+                        label="Name" 
+                        placeholder="Enter your full name" 
+                        value={name} 
+                        onChangeText={setName} 
+                    />
+                    
+                    <InputField 
+                        label="Business Name" 
+                        placeholder="Enter your shop or business name" 
+                        value={businessName} 
+                        onChangeText={setBusinessName} 
+                    />
 
-          <Text style={styles.label}>Mobile Number</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter 10-digit mobile number"
-            placeholderTextColor={Colors.textLight}
-            value={phone}
-            onChangeText={setPhone}
-            editable={!isLoading && !showWelcome}
-            keyboardType="phone-pad"
-            maxLength={10}
-          />
+                    <InputField 
+                        label="Mobile Number" 
+                        placeholder="Enter 10-digit mobile number" 
+                        value={phone} 
+                        onChangeText={setPhone}
+                        keyboardType="phone-pad"
+                        maxLength={10}
+                    />
 
-          <PrimaryButton 
-            title="Submit" 
-            onPress={handleRegister} 
-            isLoading={isLoading}
-            style={{ marginTop: 20 }}
-          />
-        </View>
+                    {/* Submit Button */}
+                    <TouchableOpacity 
+                        style={styles.primaryButton} 
+                        onPress={handleRegister}
+                        disabled={isLoading}
+                    >
+                        {isLoading ? (
+                            <ActivityIndicator color="#FFF" />
+                        ) : (
+                            <Text style={styles.primaryButtonText}>Continue Now</Text>
+                        )}
+                    </TouchableOpacity>
 
-        {/* Footer */}
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>Already have an account? </Text>
-          <TouchableOpacity onPress={() => router.back()}>
-            <Text style={styles.link}>Login</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* --- WELCOME OVERLAY MODAL --- */}
-        <Modal
-          transparent={true}
-          visible={showWelcome}
-          animationType="fade"
-        >
-          <View style={styles.overlayContainer}>
-            <View style={styles.welcomeCard}>
-              <View style={styles.iconCircle}>
-                <Text style={styles.checkIcon}>✓</Text>
-              </View>
-              <Text style={styles.welcomeTitle}>Welcome to Tharamac!</Text>
-              <Text style={styles.welcomeSubtitle}>Setting up your business profile...</Text>
-              <ActivityIndicator size="small" color={Colors.primary} style={{ marginTop: 15 }} />
+                    {/* Footer Links */}
+                    <View style={styles.footer}>
+                        <Text style={styles.footerText}>Already have an account? </Text>
+                        <TouchableOpacity onPress={() => router.push('/(auth)/login')}>
+                            <Text style={styles.linkText}>Sign In</Text>
+                        </TouchableOpacity>
+                    </View>
+                    
+                    <View style={{ height: 40 }} /> 
+                </ScrollView>
             </View>
-          </View>
-        </Modal>
 
-      </View>
-    </SafeAreaView>
-  );
+            {/* Success Modal */}
+            <Modal transparent={true} visible={showWelcome} animationType="fade">
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalCard}>
+                        <View style={styles.successIcon}>
+                            <Ionicons name="checkmark" size={30} color="#FFF" />
+                        </View>
+                        <Text style={styles.modalTitle}>Success!</Text>
+                        <Text style={styles.modalText}>Account created successfully.</Text>
+                    </View>
+                </View>
+            </Modal>
+        </View>
+    );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
-  content: { flex: 1, padding: 24, justifyContent: 'center' },
-  header: { marginBottom: 30 },
-  title: { fontSize: 28, fontWeight: 'bold', color: Colors.text, marginBottom: 8 },
-  subtitle: { fontSize: 16, color: Colors.textLight },
-  form: { marginBottom: 20 },
-  label: { fontSize: 14, fontWeight: '500', color: Colors.text, marginBottom: 8, marginTop: 12 },
-  input: {
-    backgroundColor: Colors.inputBg,
-    borderRadius: 12,
-    padding: 16,
-    fontSize: 16,
-    color: Colors.text,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  footer: { flexDirection: 'row', justifyContent: 'center', marginTop: 20 },
-  footerText: { color: Colors.textLight, fontSize: 14 },
-  link: { color: Colors.primary, fontWeight: '600', fontSize: 14 },
-  
-  // Overlay Styles
-  overlayContainer: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)', // Semi-transparent black
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  welcomeCard: {
-    width: '80%',
-    backgroundColor: 'white',
-    borderRadius: 20,
-    padding: 30,
-    alignItems: 'center',
-    elevation: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-  },
-  iconCircle: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: '#E8F5E9', // Light green
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  checkIcon: {
-    fontSize: 30,
-    color: '#4CAF50', // Green
-    fontWeight: 'bold',
-  },
-  welcomeTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: Colors.text,
-    marginBottom: 10,
-    textAlign: 'center',
-  },
-  welcomeSubtitle: {
-    fontSize: 14,
-    color: Colors.textLight,
-    textAlign: 'center',
-  },
+    mainContainer: { flex: 1, backgroundColor: Theme.primary },
+    headerArea: { flex: 0.3, justifyContent: 'center' },
+    headerContent: { paddingHorizontal: 24, paddingBottom: 20 },
+    backButton: { marginBottom: 15 },
+    headerTitle: { fontSize: 28, fontWeight: 'bold', color: '#FFF', marginBottom: 8 },
+    headerSubtitle: { fontSize: 13, color: 'rgba(255,255,255,0.8)', lineHeight: 20 },
+    
+    sheetContainer: { 
+        flex: 0.7, 
+        backgroundColor: Theme.surface, 
+        borderTopLeftRadius: 30, 
+        borderTopRightRadius: 30,
+        overflow: 'hidden'
+    },
+    sheetContent: { padding: 24, paddingTop: 30 },
+    
+    inputGroup: { marginBottom: 16 },
+    label: { fontSize: 14, fontWeight: '600', color: Theme.text, marginBottom: 8 },
+    inputContainer: {
+        flexDirection: 'row', alignItems: 'center', backgroundColor: Theme.surface,
+        borderWidth: 1, borderColor: Theme.border, borderRadius: 12, paddingHorizontal: 15, height: 50,
+    },
+    input: { flex: 1, color: Theme.text, fontSize: 15 },
+    
+    primaryButton: {
+        backgroundColor: Theme.primary, borderRadius: 25, height: 50,
+        justifyContent: 'center', alignItems: 'center', marginTop: 10,
+        shadowColor: Theme.primary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 5
+    },
+    primaryButtonText: { color: '#FFF', fontWeight: 'bold', fontSize: 16 },
+    
+    footer: { flexDirection: 'row', justifyContent: 'center', marginTop: 20 },
+    footerText: { color: Theme.textLight, fontSize: 14 },
+    linkText: { color: Theme.primary, fontWeight: 'bold', fontSize: 14 },
+
+    modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' },
+    modalCard: { backgroundColor: '#FFF', width: '80%', padding: 20, borderRadius: 20, alignItems: 'center' },
+    successIcon: { width: 50, height: 50, borderRadius: 25, backgroundColor: '#10B981', justifyContent: 'center', alignItems: 'center', marginBottom: 15 },
+    modalTitle: { fontSize: 20, fontWeight: 'bold', marginBottom: 5 },
+    modalText: { color: Theme.textLight },
 });

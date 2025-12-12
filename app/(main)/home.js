@@ -2,6 +2,7 @@ import { FontAwesome, Ionicons, MaterialCommunityIcons } from '@expo/vector-icon
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
+    Dimensions,
     Image,
     LayoutAnimation,
     Platform,
@@ -22,6 +23,8 @@ if (Platform.OS === 'android') {
     }
 }
 
+const { width } = Dimensions.get('window');
+
 // --- 1. THEME CONFIG ---
 const Colors = {
     primary: '#FF3B30',       // Red
@@ -31,7 +34,7 @@ const Colors = {
     text: '#1F2937',
     textLight: '#9CA3AF',
     cardDark: '#1C1C1E',      // Dark card background
-    premiumBg: '#2C0E37',     // Dark Purple/Navy for Premium Section (from reference)
+    premiumBg: '#2C0E37',     
     gold: '#FFD700',
     silver: '#C0C0C0',
     platinum: '#E5E4E2',
@@ -59,11 +62,37 @@ const MODULES = [
     { id: 'certificate', title: 'Certificates', icon: 'ribbon', type: 'Ionicons' },
 ];
 
-const SPECIAL_OFFER = {
-    title: 'Get Special Offer',
-    discount: '40%',
-    image: 'https://img.freepik.com/free-photo/portrait-expressive-young-woman-posing_23-2149021815.jpg', 
-};
+// --- NEW SPECIAL SCROLL DATA ---
+const SPECIAL_SCROLL_ITEMS = [
+    { 
+        id: 1, 
+        title: 'Premium Posters', 
+        subtitle: 'Get 50% Off Today', 
+        btnText: 'Claim', 
+        image: 'https://images.unsplash.com/photo-1558655146-d09347e92766?auto=format&fit=crop&w=200&q=80' // Graphic Design Image
+    },
+    { 
+        id: 2, 
+        title: 'Daily Greetings', 
+        subtitle: 'New Templates Added', 
+        btnText: 'View', 
+        image: 'https://images.unsplash.com/photo-1490349368154-73de9c9bc37c?auto=format&fit=crop&w=200&q=80' // Flowers/Greeting Image
+    },
+    { 
+        id: 3, 
+        title: 'LIC Brochures', 
+        subtitle: 'Professional Layouts', 
+        btnText: 'Explore', 
+        image: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=200&q=80' // Business Document Image
+    },
+    { 
+        id: 4, 
+        title: 'Certificates', 
+        subtitle: 'Award Designs', 
+        btnText: 'Create', 
+        image: 'https://images.unsplash.com/photo-1578269174936-2709b6aeb913?auto=format&fit=crop&w=200&q=80' // Trophy/Certificate Image
+    },
+];
 
 const FESTIVALS_DATA = [
     { id: 1, title: 'Diwali', image: 'https://via.placeholder.com/100/FF6347/FFFFFF?text=Diwali' },
@@ -71,29 +100,10 @@ const FESTIVALS_DATA = [
     { id: 3, title: 'Eid', image: 'https://via.placeholder.com/100/4CAF50/FFFFFF?text=Eid' },
 ];
 
-// SUBSCRIPTION PLANS DATA
 const SUBSCRIPTION_PLANS = [
-    { 
-        id: 'silver', 
-        name: 'Silver Plan', 
-        price: '₹499/mo', 
-        color: Colors.silver, 
-        features: ['50 Premium Posters', 'No Watermark', 'Basic Support'] 
-    },
-    { 
-        id: 'gold', 
-        name: 'Gold Plan', 
-        price: '₹999/mo', 
-        color: Colors.gold, 
-        features: ['Unlimited Posters', 'Video Maker Access', 'Priority Support', 'No Ads'] 
-    },
-    { 
-        id: 'platinum', 
-        name: 'Platinum Plan', 
-        price: '₹1499/mo', 
-        color: Colors.platinum, 
-        features: ['All Gold Features', 'Source Files Included', 'Personal Account Manager', 'Custom Branding'] 
-    },
+    { id: 'silver', name: 'Silver Plan', price: '₹499/mo', color: Colors.silver, features: ['50 Premium Posters', 'No Watermark', 'Basic Support'] },
+    { id: 'gold', name: 'Gold Plan', price: '₹999/mo', color: Colors.gold, features: ['Unlimited Posters', 'Video Maker Access', 'Priority Support', 'No Ads'] },
+    { id: 'platinum', name: 'Platinum Plan', price: '₹1499/mo', color: Colors.platinum, features: ['All Gold Features', 'Source Files Included', 'Personal Account Manager', 'Custom Branding'] },
 ];
 
 // --- 3. SUB-COMPONENTS ---
@@ -115,16 +125,12 @@ const Header = () => {
         <View style={styles.headerContainer}>
             <View style={styles.headerTopRow}>
                 <View style={styles.profileContainer}>
-                    <Image 
-                        source={{ uri: 'https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=100&q=80' }} 
-                        style={styles.headerProfileImage} 
-                    />
+                    <Image source={{ uri: 'https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=100&q=80' }} style={styles.headerProfileImage} />
                     <View style={styles.profileTextContainer}>
                         <Text style={styles.welcomeLabel}>{greeting}</Text>
                         <Text style={styles.userNameText}>Tharamac User</Text>
                     </View>
                 </View>
-
                 <TouchableOpacity style={styles.notificationBtn}>
                     <Ionicons name="notifications" size={20} color={Colors.white} />
                     <View style={styles.badge} />
@@ -134,11 +140,7 @@ const Header = () => {
             <View style={styles.searchWrapper}>
                 <View style={styles.searchContainer}>
                     <Ionicons name="search" size={20} color={Colors.textLight} />
-                    <TextInput 
-                        placeholder="Search..." 
-                        placeholderTextColor={Colors.textLight}
-                        style={styles.searchInput}
-                    />
+                    <TextInput placeholder="Search..." placeholderTextColor={Colors.textLight} style={styles.searchInput} />
                 </View>
                 <TouchableOpacity style={styles.filterBtn}>
                     <Ionicons name="options-outline" size={20} color={Colors.primary} />
@@ -163,25 +165,33 @@ const StoriesSection = () => (
     </View>
 );
 
-const SpecialOfferCard = () => (
+// --- NEW: Special Scroll Section (Carousel) ---
+const SpecialScrollSection = () => (
     <View style={styles.sectionContainer}>
         <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>#SpecialForYou</Text>
             <TouchableOpacity><Text style={styles.seeAll}>See All</Text></TouchableOpacity>
         </View>
-        <View style={styles.offerCard}>
-            <View style={styles.offerContent}>
-                <View style={styles.limitedTag}>
-                    <Text style={styles.limitedText}>Limited time!</Text>
+        
+        {/* Horizontal Scroll for Special Cards */}
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingRight: 20 }}>
+            {SPECIAL_SCROLL_ITEMS.map((item) => (
+                <View key={item.id} style={styles.scrollCard}>
+                    <View style={styles.scrollCardContent}>
+                        <View style={styles.limitedTag}>
+                            <Text style={styles.limitedText}>Limited!</Text>
+                        </View>
+                        <Text style={styles.scrollTitle}>{item.title}</Text>
+                        <Text style={styles.scrollSubtitle}>{item.subtitle}</Text>
+                        
+                        <TouchableOpacity style={styles.claimBtn}>
+                            <Text style={styles.claimText}>{item.btnText}</Text>
+                        </TouchableOpacity>
+                    </View>
+                    <Image source={{ uri: item.image }} style={styles.scrollImage} />
                 </View>
-                <Text style={styles.offerTitle}>{SPECIAL_OFFER.title}</Text>
-                <Text style={styles.offerDiscount}>Up to {SPECIAL_OFFER.discount}</Text>
-                <TouchableOpacity style={styles.claimBtn}>
-                    <Text style={styles.claimText}>Claim</Text>
-                </TouchableOpacity>
-            </View>
-            <Image source={{ uri: SPECIAL_OFFER.image }} style={styles.offerImage} />
-        </View>
+            ))}
+        </ScrollView>
     </View>
 );
 
@@ -197,10 +207,8 @@ const CategoryItem = ({ item, onPress }) => {
     );
 };
 
-// --- NEW: Subscription Accordion Component ---
 const SubscriptionSection = () => {
     const [expandedId, setExpandedId] = useState(null);
-
     const toggleExpand = (id) => {
         LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
         setExpandedId(expandedId === id ? null : id);
@@ -211,24 +219,17 @@ const SubscriptionSection = () => {
             <View style={styles.sectionHeader}>
                 <Text style={styles.sectionTitle}>Premium Plans</Text>
             </View>
-            
-            {/* Premium Card Container */}
             <View style={styles.premiumCard}>
                 <View style={styles.premiumHeader}>
                     <Ionicons name="diamond-outline" size={28} color={Colors.white} />
                     <Text style={styles.premiumTitle}>Upgrade to Pro</Text>
                     <Text style={styles.premiumSubtitle}>Unlock exclusive features today!</Text>
                 </View>
-
                 {SUBSCRIPTION_PLANS.map((plan) => {
                     const isExpanded = expandedId === plan.id;
                     return (
                         <View key={plan.id} style={styles.planContainer}>
-                            <TouchableOpacity 
-                                style={[styles.planHeader, isExpanded && styles.planHeaderActive, { borderColor: plan.color }]} 
-                                onPress={() => toggleExpand(plan.id)}
-                                activeOpacity={0.9}
-                            >
+                            <TouchableOpacity style={[styles.planHeader, isExpanded && styles.planHeaderActive, { borderColor: plan.color }]} onPress={() => toggleExpand(plan.id)} activeOpacity={0.9}>
                                 <View style={styles.planInfo}>
                                     <View style={[styles.planIcon, { backgroundColor: plan.color }]}>
                                         <MaterialCommunityIcons name="crown" size={16} color={Colors.secondary} />
@@ -238,14 +239,8 @@ const SubscriptionSection = () => {
                                         <Text style={styles.planPrice}>{plan.price}</Text>
                                     </View>
                                 </View>
-                                <Ionicons 
-                                    name={isExpanded ? "chevron-up" : "chevron-down"} 
-                                    size={20} 
-                                    color={Colors.white} 
-                                />
+                                <Ionicons name={isExpanded ? "chevron-up" : "chevron-down"} size={20} color={Colors.white} />
                             </TouchableOpacity>
-
-                            {/* Accordion Content */}
                             {isExpanded && (
                                 <View style={styles.planDetails}>
                                     {plan.features.map((feature, index) => (
@@ -267,11 +262,10 @@ const SubscriptionSection = () => {
     );
 };
 
-
 // --- 4. MAIN SCREEN ---
 export default function HomeScreen() {
     const router = useRouter();
-    const [activeTab, setActiveTab] = useState('Home'); // Track active tab
+    const [activeTab, setActiveTab] = useState('Home'); 
 
     const handleNavigation = (route) => {
         console.log("Navigating to", route);
@@ -292,7 +286,9 @@ export default function HomeScreen() {
                 <Header />
                 <View style={{ marginTop: 25 }} />
                 <StoriesSection />
-                <SpecialOfferCard />
+                
+                {/* REPLACED SINGLE CARD WITH SCROLL SECTION */}
+                <SpecialScrollSection />
                 
                 <View style={styles.sectionContainer}>
                     <View style={styles.sectionHeader}>
@@ -326,12 +322,10 @@ export default function HomeScreen() {
                     </ScrollView>
                 </View>
 
-                {/* --- NEW SUBSCRIPTION SECTION ADDED HERE --- */}
                 <SubscriptionSection />
                 
             </ScrollView>
 
-            {/* Dark Floating Bottom Bar with 4 Options */}
             <View style={styles.bottomBarContainer}>
                 <View style={styles.bottomBar}>
                     {tabs.map((tab) => {
@@ -407,16 +401,34 @@ const styles = StyleSheet.create({
     sectionTitle: { fontSize: 18, fontWeight: 'bold', color: Colors.text },
     seeAll: { color: Colors.primary, fontSize: 13, fontWeight: '600' },
 
-    // Cards
-    offerCard: { backgroundColor: Colors.cardDark, borderRadius: 20, height: 160, flexDirection: 'row', overflow: 'hidden', padding: 20 },
-    offerContent: { flex: 1, justifyContent: 'center' },
+    // --- NEW: SCROLL CARD STYLES ---
+    scrollCard: {
+        width: 280, 
+        height: 160,
+        backgroundColor: Colors.cardDark,
+        borderRadius: 20,
+        marginRight: 15, // Space between cards
+        flexDirection: 'row',
+        overflow: 'hidden',
+        padding: 20,
+        position: 'relative'
+    },
+    scrollCardContent: { flex: 1, justifyContent: 'center', zIndex: 2 },
     limitedTag: { backgroundColor: Colors.white, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12, alignSelf: 'flex-start', marginBottom: 10 },
-    limitedText: { fontSize: 10, fontWeight: 'bold' },
-    offerTitle: { color: Colors.white, fontSize: 18, fontWeight: 'bold' },
-    offerDiscount: { color: Colors.white, fontSize: 24, fontWeight: 'bold', marginVertical: 5 },
+    limitedText: { fontSize: 10, fontWeight: 'bold', color: Colors.secondary },
+    scrollTitle: { color: Colors.white, fontSize: 18, fontWeight: 'bold', marginBottom: 4 },
+    scrollSubtitle: { color: Colors.textLight, fontSize: 12, marginBottom: 12 },
     claimBtn: { backgroundColor: Colors.primary, paddingVertical: 8, paddingHorizontal: 20, borderRadius: 20, alignSelf: 'flex-start' },
     claimText: { color: Colors.white, fontWeight: 'bold', fontSize: 12 },
-    offerImage: { width: 120, height: 160, resizeMode: 'cover', position: 'absolute', right: -20, bottom: -20 },
+    scrollImage: { 
+        width: 140, 
+        height: 180, 
+        resizeMode: 'cover', 
+        position: 'absolute', 
+        right: -30, 
+        bottom: -20,
+        transform: [{ rotate: '-10deg' }] // Tilted style like reference
+    },
 
     categoriesGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
     categoryItem: { width: '22%', alignItems: 'center', marginBottom: 20 },
@@ -430,96 +442,27 @@ const styles = StyleSheet.create({
     flashTitle: { marginTop: 10, fontWeight: 'bold', fontSize: 14 },
     heartBtn: { position: 'absolute', top: 10, right: 10, backgroundColor: Colors.white, padding: 5, borderRadius: 15, elevation: 2 },
 
-    // --- SUBSCRIPTION STYLES (NEW) ---
-    premiumCard: {
-        backgroundColor: Colors.premiumBg,
-        borderRadius: 20,
-        padding: 20,
-        marginBottom: 20,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 5 },
-        shadowOpacity: 0.2,
-        shadowRadius: 10,
-        elevation: 8,
-    },
+    // Subscription Styles
+    premiumCard: { backgroundColor: Colors.premiumBg, borderRadius: 20, padding: 20, marginBottom: 20, shadowColor: '#000', shadowOffset: { width: 0, height: 5 }, shadowOpacity: 0.2, shadowRadius: 10, elevation: 8 },
     premiumHeader: { alignItems: 'center', marginBottom: 20 },
     premiumTitle: { color: Colors.white, fontSize: 22, fontWeight: 'bold', marginTop: 10 },
     premiumSubtitle: { color: 'rgba(255,255,255,0.7)', fontSize: 12, marginTop: 5 },
-    
-    planContainer: {
-        marginBottom: 12,
-        backgroundColor: 'rgba(255,255,255,0.05)',
-        borderRadius: 12,
-        overflow: 'hidden',
-    },
-    planHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: 15,
-        borderWidth: 1,
-        borderColor: 'transparent',
-        borderRadius: 12,
-    },
-    planHeaderActive: {
-        backgroundColor: 'rgba(255,255,255,0.1)',
-        borderWidth: 1,
-    },
+    planContainer: { marginBottom: 12, backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 12, overflow: 'hidden' },
+    planHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 15, borderWidth: 1, borderColor: 'transparent', borderRadius: 12 },
+    planHeaderActive: { backgroundColor: 'rgba(255,255,255,0.1)', borderWidth: 1 },
     planInfo: { flexDirection: 'row', alignItems: 'center' },
     planIcon: { width: 30, height: 30, borderRadius: 15, justifyContent: 'center', alignItems: 'center', marginRight: 12 },
     planName: { fontSize: 16, fontWeight: 'bold' },
     planPrice: { color: 'rgba(255,255,255,0.7)', fontSize: 12 },
-    
     planDetails: { padding: 15, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.1)' },
     featureRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
     featureText: { color: Colors.white, fontSize: 13, marginLeft: 8 },
     subscribeBtn: { marginTop: 15, paddingVertical: 12, borderRadius: 8, alignItems: 'center' },
     subscribeText: { color: Colors.secondary, fontWeight: 'bold', fontSize: 14 },
 
-    // --- BOTTOM BAR STYLES ---
-    bottomBarContainer: {
-        position: 'absolute',
-        bottom: 30,
-        left: 0,
-        right: 0,
-        alignItems: 'center',
-        paddingHorizontal: 20,
-    },
-    bottomBar: {
-        flexDirection: 'row',
-        backgroundColor: Colors.navBarBg, // Dark Background
-        borderRadius: 35,
-        height: 70,
-        width: '100%',
-        justifyContent: 'space-around', 
-        alignItems: 'center',
-        paddingHorizontal: 10,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 10 },
-        shadowOpacity: 0.3,
-        shadowRadius: 20,
-        elevation: 15,
-    },
-    tabItem: {
-        width: 60, 
-        height: 70,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    activeTabCircle: {
-        width: 55,
-        height: 55,
-        borderRadius: 30,
-        backgroundColor: Colors.primary, // Red Circle
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginBottom: 35, 
-        borderWidth: 4,
-        borderColor: Colors.background, 
-        shadowColor: Colors.primary,
-        shadowOffset: { width: 0, height: 5 },
-        shadowOpacity: 0.5,
-        shadowRadius: 10,
-        elevation: 10,
-    },
+    // Bottom Bar
+    bottomBarContainer: { position: 'absolute', bottom: 30, left: 0, right: 0, alignItems: 'center', paddingHorizontal: 20 },
+    bottomBar: { flexDirection: 'row', backgroundColor: Colors.navBarBg, borderRadius: 35, height: 70, width: '100%', justifyContent: 'space-around', alignItems: 'center', paddingHorizontal: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.3, shadowRadius: 20, elevation: 15 },
+    tabItem: { width: 60, height: 70, justifyContent: 'center', alignItems: 'center' },
+    activeTabCircle: { width: 55, height: 55, borderRadius: 30, backgroundColor: Colors.primary, justifyContent: 'center', alignItems: 'center', marginBottom: 35, borderWidth: 4, borderColor: Colors.background, shadowColor: Colors.primary, shadowOffset: { width: 0, height: 5 }, shadowOpacity: 0.5, shadowRadius: 10, elevation: 10 },
 });
