@@ -6,7 +6,6 @@ import {
     Alert,
     Image,
     Platform,
-    SafeAreaView,
     ScrollView,
     StatusBar,
     StyleSheet,
@@ -30,11 +29,11 @@ const Colors = {
 
 // --- DATA ---
 const MENU_ITEMS = [
-    { id: 1, title: 'Edit Profile', icon: 'person-outline', type: 'Ionicons' },
-    { id: 2, title: 'My Subscription', icon: 'diamond-stone', type: 'MaterialCommunityIcons', isPremium: true },
-    { id: 3, title: 'Business Details', icon: 'briefcase-outline', type: 'Ionicons' },
-    { id: 4, title: 'App Settings', icon: 'settings-outline', type: 'Ionicons' },
-    { id: 5, title: 'Help & Support', icon: 'headset-outline', type: 'Ionicons' },
+    { id: 1, title: 'Edit Profile', icon: 'person-outline', type: 'Ionicons', route: '/(main)/edit-profile' },
+    { id: 2, title: 'My Subscription', icon: 'diamond-stone', type: 'MaterialCommunityIcons', isPremium: true, route: '/(main)/subscription' },
+    { id: 3, title: 'Business Details', icon: 'briefcase-outline', type: 'Ionicons', route: '/(main)/business-details' },
+    { id: 4, title: 'App Settings', icon: 'settings-outline', type: 'Ionicons', route: '/(main)/settings' },
+    { id: 5, title: 'Help & Support', icon: 'headset-outline', type: 'Ionicons', route: '/(main)/help' },
 ];
 
 export default function ProfileScreen() {
@@ -65,7 +64,7 @@ export default function ProfileScreen() {
 
     return (
         <View style={styles.container}>
-            {/* ✅ FIXED: Translucent Status Bar for Premium Look */}
+            {/* ✅ FIXED: Immersive Status Bar */}
             <StatusBar 
                 barStyle="light-content" 
                 backgroundColor="transparent" 
@@ -74,17 +73,15 @@ export default function ProfileScreen() {
 
             {/* --- RED HEADER BACKGROUND --- */}
             <View style={styles.headerBackground}>
-                <SafeAreaView style={styles.safeArea}>
-                    <View style={styles.headerNav}>
-                        <TouchableOpacity onPress={() => router.back()} style={styles.iconBtn}>
-                            <Ionicons name="arrow-back" size={24} color={Colors.white} />
-                        </TouchableOpacity>
-                        <Text style={styles.headerTitle}>Profile</Text>
-                        <TouchableOpacity style={styles.iconBtn}>
-                            <Ionicons name="settings-sharp" size={24} color={Colors.white} />
-                        </TouchableOpacity>
-                    </View>
-                </SafeAreaView>
+                <View style={styles.headerNav}>
+                    <TouchableOpacity onPress={() => router.back()} style={styles.iconBtn}>
+                        <Ionicons name="arrow-back" size={24} color={Colors.white} />
+                    </TouchableOpacity>
+                    <Text style={styles.headerTitle}>Profile</Text>
+                    <TouchableOpacity style={styles.iconBtn}>
+                        <Ionicons name="settings-sharp" size={24} color={Colors.white} />
+                    </TouchableOpacity>
+                </View>
             </View>
 
             <ScrollView 
@@ -132,23 +129,16 @@ export default function ProfileScreen() {
                     </View>
                 </View>
 
-                {/* --- REFER BANNER --- */}
-                <TouchableOpacity style={styles.bannerContainer}>
-                    <View>
-                        <Text style={styles.bannerTitle}>Refer & Earn</Text>
-                        <Text style={styles.bannerSub}>Get 1 Month Premium Free</Text>
-                    </View>
-                    <View style={styles.bannerIcon}>
-                        <Ionicons name="gift" size={24} color={Colors.primary} />
-                    </View>
-                </TouchableOpacity>
-
                 {/* --- MENU LIST --- */}
                 <View style={styles.menuContainer}>
                     {MENU_ITEMS.map((item) => {
                         const IconComponent = item.type === 'Ionicons' ? Ionicons : MaterialCommunityIcons;
                         return (
-                            <TouchableOpacity key={item.id} style={styles.menuItem}>
+                            <TouchableOpacity 
+                                key={item.id} 
+                                style={styles.menuItem}
+                                onPress={() => router.push(item.route)}
+                            >
                                 <View style={[styles.menuIconBox, item.isPremium && { backgroundColor: '#FFF8E1' }]}>
                                     <IconComponent name={item.icon} size={22} color={item.isPremium ? '#F59E0B' : Colors.text} />
                                 </View>
@@ -187,23 +177,20 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: Colors.background },
     
-    // Header
+    // ✅ FIXED HEADER STYLES
     headerBackground: {
         backgroundColor: Colors.primary,
-        height: 200, // Slightly taller to account for status bar
+        // Calculate padding based on Device OS
+        paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 30) + 20 : 60,
+        paddingBottom: 80, // Space for the floating card overlap
+        paddingHorizontal: 20,
         borderBottomLeftRadius: 30,
         borderBottomRightRadius: 30,
-        paddingHorizontal: 20,
-    },
-    safeArea: {
-        // ✅ FIXED: Adds padding on Android so content doesn't hide behind status bar
-        paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight + 10 : 0, 
     },
     headerNav: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginTop: 10,
     },
     headerTitle: {
         fontSize: 18,
@@ -218,7 +205,7 @@ const styles = StyleSheet.create({
 
     // Main Content
     scrollView: {
-        marginTop: -90, // Adjusted overlap
+        marginTop: -60, // Pulls the profile card up to overlap the red header
     },
 
     // Profile Card
@@ -304,34 +291,6 @@ const styles = StyleSheet.create({
         width: 1,
         height: 30,
         backgroundColor: '#E5E7EB',
-    },
-
-    // Banner
-    bannerContainer: {
-        backgroundColor: '#E0F2FE', 
-        marginHorizontal: 20,
-        marginTop: 20,
-        borderRadius: 16,
-        padding: 15,
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        borderWidth: 1,
-        borderColor: '#BAE6FD',
-    },
-    bannerTitle: {
-        fontSize: 14,
-        fontWeight: 'bold',
-        color: '#0284C7',
-    },
-    bannerSub: {
-        fontSize: 11,
-        color: '#0EA5E9',
-    },
-    bannerIcon: {
-        backgroundColor: Colors.white,
-        padding: 8,
-        borderRadius: 12,
     },
 
     // Menu
