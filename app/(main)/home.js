@@ -1,10 +1,12 @@
 import { FontAwesome, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
+    Animated,
     Dimensions,
     Image,
     LayoutAnimation,
+    Modal,
     Platform,
     ScrollView,
     StatusBar,
@@ -23,7 +25,7 @@ if (Platform.OS === 'android') {
     }
 }
 
-const { width } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
 
 // --- 1. THEME CONFIG ---
 const Colors = {
@@ -44,11 +46,11 @@ const Colors = {
 
 // --- 2. DATA ---
 const STORIES_DATA = [
-    { id: 1, title: 'New', image: 'https://images.unsplash.com/photo-1511367461989-f85a21fda167?auto=format&fit=crop&w=100&q=80' },
-    { id: 2, title: 'Offers', image: 'https://images.unsplash.com/photo-1572584642822-6f8de0243c93?auto=format&fit=crop&w=150&q=80' },
-    { id: 3, title: 'Diwali', image: 'https://images.unsplash.com/photo-1607083206869-4c7672e72a8a?auto=format&fit=crop&w=150&q=80' },
-    { id: 4, title: 'Winners', image: 'https://images.unsplash.com/photo-1517457373958-b7bdd4587205?auto=format&fit=crop&w=150&q=80' },
-    { id: 5, title: 'Updates', image: 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=150&q=80' },
+    { id: 1, title: 'New', image: 'https://images.unsplash.com/photo-1511367461989-f85a21fda167?auto=format&fit=crop&w=400&q=80' },
+    { id: 2, title: 'Offers', image: 'https://images.unsplash.com/photo-1572584642822-6f8de0243c93?auto=format&fit=crop&w=400&q=80' },
+    { id: 3, title: 'Diwali', image: 'https://images.unsplash.com/photo-1607083206869-4c7672e72a8a?auto=format&fit=crop&w=400&q=80' },
+    { id: 4, title: 'Winners', image: 'https://images.unsplash.com/photo-1517457373958-b7bdd4587205?auto=format&fit=crop&w=400&q=80' },
+    { id: 5, title: 'Updates', image: 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=400&q=80' },
 ];
 
 const MODULES = [
@@ -62,42 +64,35 @@ const MODULES = [
     { id: 'certificate', title: 'Certificates', icon: 'ribbon', type: 'Ionicons' },
 ];
 
-// --- NEW SPECIAL SCROLL DATA ---
 const SPECIAL_SCROLL_ITEMS = [
     { 
         id: 1, 
         title: 'Premium Posters', 
         subtitle: 'Get 50% Off Today', 
         btnText: 'Claim', 
-        image: 'https://images.unsplash.com/photo-1558655146-d09347e92766?auto=format&fit=crop&w=200&q=80' // Graphic Design Image
+        image: 'https://images.unsplash.com/photo-1558655146-d09347e92766?auto=format&fit=crop&w=200&q=80' 
     },
     { 
         id: 2, 
         title: 'Daily Greetings', 
         subtitle: 'New Templates Added', 
         btnText: 'View', 
-        image: 'https://images.unsplash.com/photo-1490349368154-73de9c9bc37c?auto=format&fit=crop&w=200&q=80' // Flowers/Greeting Image
+        image: 'https://images.unsplash.com/photo-1490349368154-73de9c9bc37c?auto=format&fit=crop&w=200&q=80' 
     },
     { 
         id: 3, 
         title: 'LIC Brochures', 
         subtitle: 'Professional Layouts', 
         btnText: 'Explore', 
-        image: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=200&q=80' // Business Document Image
+        image: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=200&q=80' 
     },
     { 
         id: 4, 
         title: 'Certificates', 
         subtitle: 'Award Designs', 
         btnText: 'Create', 
-        image: 'https://images.unsplash.com/photo-1578269174936-2709b6aeb913?auto=format&fit=crop&w=200&q=80' // Trophy/Certificate Image
+        image: 'https://images.unsplash.com/photo-1578269174936-2709b6aeb913?auto=format&fit=crop&w=200&q=80' 
     },
-];
-
-const FESTIVALS_DATA = [
-    { id: 1, title: 'Diwali', image: 'https://via.placeholder.com/100/FF6347/FFFFFF?text=Diwali' },
-    { id: 2, title: 'Holi', image: 'https://via.placeholder.com/100/FFC0CB/FFFFFF?text=Holi' },
-    { id: 3, title: 'Eid', image: 'https://via.placeholder.com/100/4CAF50/FFFFFF?text=Eid' },
 ];
 
 const SUBSCRIPTION_PLANS = [
@@ -150,11 +145,56 @@ const Header = () => {
     );
 };
 
-const StoriesSection = () => (
+// --- Story Viewer Component ---
+const StoryViewer = ({ story, onClose }) => {
+    const progress = useRef(new Animated.Value(0)).current;
+
+    useEffect(() => {
+        Animated.timing(progress, {
+            toValue: 1,
+            duration: 15000, 
+            useNativeDriver: false,
+        }).start(({ finished }) => {
+            if (finished) {
+                onClose(); 
+            }
+        });
+    }, []);
+
+    if (!story) return null;
+
+    const widthInterpolated = progress.interpolate({
+        inputRange: [0, 1],
+        outputRange: ['0%', '100%'],
+    });
+
+    return (
+        <Modal animationType="fade" transparent={false} visible={true}>
+            <View style={styles.fullStoryContainer}>
+                <StatusBar hidden />
+                <View style={styles.progressBarContainer}>
+                    <Animated.View style={[styles.progressBar, { width: widthInterpolated }]} />
+                </View>
+                <View style={styles.storyHeader}>
+                    <View style={styles.storyUser}>
+                        <Image source={{ uri: story.image }} style={styles.storyUserImage} />
+                        <Text style={styles.storyUserName}>{story.title}</Text>
+                    </View>
+                    <TouchableOpacity onPress={onClose} style={styles.closeStoryBtn}>
+                        <Ionicons name="close" size={28} color="#FFF" />
+                    </TouchableOpacity>
+                </View>
+                <Image source={{ uri: story.image }} style={styles.fullStoryImage} resizeMode="cover" />
+            </View>
+        </Modal>
+    );
+};
+
+const StoriesSection = ({ onStoryPress }) => (
     <View style={styles.storiesContainer}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 15 }}>
             {STORIES_DATA.map((story) => (
-                <TouchableOpacity key={story.id} style={styles.storyItem}>
+                <TouchableOpacity key={story.id} style={styles.storyItem} onPress={() => onStoryPress(story)}>
                     <View style={styles.storyCircle}>
                         <Image source={{ uri: story.image }} style={styles.storyImage} />
                     </View>
@@ -165,15 +205,12 @@ const StoriesSection = () => (
     </View>
 );
 
-// --- NEW: Special Scroll Section (Carousel) ---
 const SpecialScrollSection = () => (
     <View style={styles.sectionContainer}>
         <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>#SpecialForYou</Text>
+            <Text style={styles.sectionTitle}>Special For You</Text>
             <TouchableOpacity><Text style={styles.seeAll}>See All</Text></TouchableOpacity>
         </View>
-        
-        {/* Horizontal Scroll for Special Cards */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingRight: 20 }}>
             {SPECIAL_SCROLL_ITEMS.map((item) => (
                 <View key={item.id} style={styles.scrollCard}>
@@ -183,7 +220,6 @@ const SpecialScrollSection = () => (
                         </View>
                         <Text style={styles.scrollTitle}>{item.title}</Text>
                         <Text style={styles.scrollSubtitle}>{item.subtitle}</Text>
-                        
                         <TouchableOpacity style={styles.claimBtn}>
                             <Text style={styles.claimText}>{item.btnText}</Text>
                         </TouchableOpacity>
@@ -266,6 +302,7 @@ const SubscriptionSection = () => {
 export default function HomeScreen() {
     const router = useRouter();
     const [activeTab, setActiveTab] = useState('Home'); 
+    const [activeStory, setActiveStory] = useState(null);
 
     const handleNavigation = (route) => {
         console.log("Navigating to", route);
@@ -285,9 +322,9 @@ export default function HomeScreen() {
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
                 <Header />
                 <View style={{ marginTop: 25 }} />
-                <StoriesSection />
                 
-                {/* REPLACED SINGLE CARD WITH SCROLL SECTION */}
+                <StoriesSection onStoryPress={(story) => setActiveStory(story)} />
+                
                 <SpecialScrollSection />
                 
                 <View style={styles.sectionContainer}>
@@ -302,25 +339,7 @@ export default function HomeScreen() {
                     </View>
                 </View>
                 
-                <View style={styles.sectionContainer}>
-                    <View style={styles.sectionHeader}>
-                        <Text style={styles.sectionTitle}>Flash Sale</Text>
-                        <View style={styles.timerTag}>
-                            <Text style={styles.timerText}>Closing in: 02:12:56</Text>
-                        </View>
-                    </View>
-                    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 15 }}>
-                        {FESTIVALS_DATA.map((item) => (
-                            <View key={item.id} style={styles.flashCard}>
-                                <Image source={{ uri: item.image }} style={styles.flashImage} />
-                                <TouchableOpacity style={styles.heartBtn}>
-                                    <Ionicons name="heart-outline" size={16} color={Colors.primary} />
-                                </TouchableOpacity>
-                                <Text style={styles.flashTitle}>{item.title}</Text>
-                            </View>
-                        ))}
-                    </ScrollView>
-                </View>
+                {/* --- FLASH SALE REMOVED HERE --- */}
 
                 <SubscriptionSection />
                 
@@ -349,6 +368,14 @@ export default function HomeScreen() {
                     })}
                 </View>
             </View>
+
+            {/* RENDER STORY VIEWER IF ACTIVE */}
+            {activeStory && (
+                <StoryViewer 
+                    story={activeStory} 
+                    onClose={() => setActiveStory(null)} 
+                />
+            )}
 
         </View>
     );
@@ -390,29 +417,79 @@ const styles = StyleSheet.create({
         shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 10, elevation: 5,
     },
 
-    // Stories & Sections
+    // Stories
     storiesContainer: { marginTop: 30, marginBottom: 10 },
     storyItem: { alignItems: 'center', marginRight: 15 },
     storyCircle: { width: 65, height: 65, borderRadius: 32.5, borderWidth: 2, borderColor: Colors.primary, justifyContent: 'center', alignItems: 'center', padding: 2 },
     storyImage: { width: '100%', height: '100%', borderRadius: 30 },
     storyLabel: { marginTop: 5, fontSize: 11, color: Colors.text, fontWeight: '500' },
+
+    // Story Viewer Styles
+    fullStoryContainer: {
+        flex: 1,
+        backgroundColor: '#000',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    fullStoryImage: {
+        width: width,
+        height: height,
+        position: 'absolute',
+    },
+    storyHeader: {
+        position: 'absolute',
+        top: 50,
+        left: 0,
+        right: 0,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingHorizontal: 20,
+        zIndex: 10,
+    },
+    storyUser: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    storyUserImage: {
+        width: 35,
+        height: 35,
+        borderRadius: 17.5,
+        borderWidth: 1,
+        borderColor: '#FFF',
+    },
+    storyUserName: {
+        color: '#FFF',
+        fontWeight: 'bold',
+        marginLeft: 10,
+        fontSize: 16,
+    },
+    closeStoryBtn: {
+        padding: 5,
+    },
+    progressBarContainer: {
+        position: 'absolute',
+        top: 40,
+        left: 10,
+        right: 10,
+        height: 3,
+        backgroundColor: 'rgba(255,255,255,0.3)',
+        borderRadius: 2,
+        zIndex: 10,
+    },
+    progressBar: {
+        height: '100%',
+        backgroundColor: '#FFF',
+        borderRadius: 2,
+    },
+
+    // Sections
     sectionContainer: { marginTop: 20, paddingHorizontal: 20 },
     sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15 },
     sectionTitle: { fontSize: 18, fontWeight: 'bold', color: Colors.text },
     seeAll: { color: Colors.primary, fontSize: 13, fontWeight: '600' },
 
-    // --- NEW: SCROLL CARD STYLES ---
-    scrollCard: {
-        width: 280, 
-        height: 160,
-        backgroundColor: Colors.cardDark,
-        borderRadius: 20,
-        marginRight: 15, // Space between cards
-        flexDirection: 'row',
-        overflow: 'hidden',
-        padding: 20,
-        position: 'relative'
-    },
+    scrollCard: { width: 280, height: 160, backgroundColor: Colors.cardDark, borderRadius: 20, marginRight: 15, flexDirection: 'row', overflow: 'hidden', padding: 20, position: 'relative' },
     scrollCardContent: { flex: 1, justifyContent: 'center', zIndex: 2 },
     limitedTag: { backgroundColor: Colors.white, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12, alignSelf: 'flex-start', marginBottom: 10 },
     limitedText: { fontSize: 10, fontWeight: 'bold', color: Colors.secondary },
@@ -420,29 +497,13 @@ const styles = StyleSheet.create({
     scrollSubtitle: { color: Colors.textLight, fontSize: 12, marginBottom: 12 },
     claimBtn: { backgroundColor: Colors.primary, paddingVertical: 8, paddingHorizontal: 20, borderRadius: 20, alignSelf: 'flex-start' },
     claimText: { color: Colors.white, fontWeight: 'bold', fontSize: 12 },
-    scrollImage: { 
-        width: 140, 
-        height: 180, 
-        resizeMode: 'cover', 
-        position: 'absolute', 
-        right: -30, 
-        bottom: -20,
-        transform: [{ rotate: '-10deg' }] // Tilted style like reference
-    },
+    scrollImage: { width: 140, height: 180, resizeMode: 'cover', position: 'absolute', right: -30, bottom: -20, transform: [{ rotate: '-10deg' }] },
 
     categoriesGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
     categoryItem: { width: '22%', alignItems: 'center', marginBottom: 20 },
     iconCircle: { width: 55, height: 55, backgroundColor: Colors.lightRed, borderRadius: 27.5, justifyContent: 'center', alignItems: 'center', marginBottom: 8 },
     categoryLabel: { fontSize: 11, color: Colors.text, textAlign: 'center', fontWeight: '500' },
 
-    timerTag: { flexDirection: 'row', alignItems: 'center' },
-    timerText: { fontSize: 12, color: Colors.primary, fontWeight: '600' },
-    flashCard: { width: 140, marginRight: 15, backgroundColor: Colors.white, padding: 10, borderRadius: 15, elevation: 2 },
-    flashImage: { width: 120, height: 100, borderRadius: 10, alignSelf: 'center' },
-    flashTitle: { marginTop: 10, fontWeight: 'bold', fontSize: 14 },
-    heartBtn: { position: 'absolute', top: 10, right: 10, backgroundColor: Colors.white, padding: 5, borderRadius: 15, elevation: 2 },
-
-    // Subscription Styles
     premiumCard: { backgroundColor: Colors.premiumBg, borderRadius: 20, padding: 20, marginBottom: 20, shadowColor: '#000', shadowOffset: { width: 0, height: 5 }, shadowOpacity: 0.2, shadowRadius: 10, elevation: 8 },
     premiumHeader: { alignItems: 'center', marginBottom: 20 },
     premiumTitle: { color: Colors.white, fontSize: 22, fontWeight: 'bold', marginTop: 10 },
@@ -460,7 +521,6 @@ const styles = StyleSheet.create({
     subscribeBtn: { marginTop: 15, paddingVertical: 12, borderRadius: 8, alignItems: 'center' },
     subscribeText: { color: Colors.secondary, fontWeight: 'bold', fontSize: 14 },
 
-    // Bottom Bar
     bottomBarContainer: { position: 'absolute', bottom: 30, left: 0, right: 0, alignItems: 'center', paddingHorizontal: 20 },
     bottomBar: { flexDirection: 'row', backgroundColor: Colors.navBarBg, borderRadius: 35, height: 70, width: '100%', justifyContent: 'space-around', alignItems: 'center', paddingHorizontal: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.3, shadowRadius: 20, elevation: 15 },
     tabItem: { width: 60, height: 70, justifyContent: 'center', alignItems: 'center' },

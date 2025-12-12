@@ -2,20 +2,23 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import {
-  Alert,
-  Image,
-  Keyboard,
-  KeyboardAvoidingView,
-  Platform,
-  SafeAreaView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  TouchableWithoutFeedback,
-  View
+    ActivityIndicator,
+    Alert,
+    Image,
+    Keyboard,
+    KeyboardAvoidingView,
+    Platform,
+    SafeAreaView,
+    StatusBar,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    TouchableWithoutFeedback,
+    View
 } from 'react-native';
+// ✅ Import the login service
+import { loginUser } from '../../src/services/auth.api';
 
 // Theme Colors
 const Theme = {
@@ -32,17 +35,41 @@ export default function LoginScreen() {
     const [isLoading, setIsLoading] = useState(false);
 
     const handleLogin = async () => {
-        if (phone.length !== 10) {
-            Alert.alert('Error', 'Please enter a valid 10-digit mobile number');
+        // 1. Basic Validation
+        if (!phone || phone.length !== 10) {
+            Alert.alert('Invalid Input', 'Please enter a valid 10-digit mobile number');
             return;
         }
+
         setIsLoading(true);
 
-        // --- SIMULATION ---
-        setTimeout(() => {
+        try {
+            // 2. Call API to check if user exists in Database
+            const response = await loginUser(phone);
+            
             setIsLoading(false);
-            router.push({ pathname: '/(auth)/otp', params: { phone: phone } });
-        }, 1000);
+
+            if (response.status === 'success') {
+                // ✅ User Found: Proceed to OTP
+                // You can also save user data to context/storage here if needed
+                console.log("Login Success:", response.message);
+                router.push({ pathname: '/(auth)/otp', params: { phone: phone } });
+            } else {
+                // ❌ User Not Found: Show Error
+                Alert.alert(
+                    'Account Not Found', 
+                    response.message, 
+                    [
+                        { text: 'Cancel', style: 'cancel' },
+                        { text: 'Sign Up', onPress: () => router.push('/(auth)/register') }
+                    ]
+                );
+            }
+
+        } catch (error) {
+            setIsLoading(false);
+            Alert.alert('Error', 'Something went wrong. Please check your internet.');
+        }
     };
 
     return (
@@ -90,6 +117,7 @@ export default function LoginScreen() {
                                     value={phone}
                                     onChangeText={setPhone}
                                     maxLength={10}
+                                    editable={!isLoading}
                                 />
                                 {phone.length > 0 && (
                                     <TouchableOpacity onPress={() => setPhone('')}>
@@ -102,13 +130,16 @@ export default function LoginScreen() {
                             <TouchableOpacity 
                                 style={styles.primaryButton} 
                                 onPress={handleLogin}
+                                disabled={isLoading}
                             >
-                                <Text style={styles.primaryButtonText}>
-                                    {isLoading ? 'Processing...' : 'Keep Going'}
-                                </Text>
+                                {isLoading ? (
+                                    <ActivityIndicator color="#FFF" />
+                                ) : (
+                                    <Text style={styles.primaryButtonText}>Keep Going</Text>
+                                )}
                             </TouchableOpacity>
 
-                            {/* NEW: Sign Up Option */}
+                            {/* Sign Up Option */}
                             <View style={styles.footer}>
                                 <Text style={styles.footerText}>New user? </Text>
                                 <TouchableOpacity onPress={() => router.push('/(auth)/register')}>
@@ -157,7 +188,6 @@ const styles = StyleSheet.create({
     },
     primaryButtonText: { color: '#FFF', fontWeight: 'bold', fontSize: 16 },
 
-    // Footer Styles
     footer: { flexDirection: 'row', justifyContent: 'center', marginTop: 20 },
     footerText: { color: Theme.textLight, fontSize: 14 },
     linkText: { color: Theme.primary, fontWeight: 'bold', fontSize: 14 },
