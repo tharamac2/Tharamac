@@ -308,16 +308,17 @@ export default function HomeScreen() {
         console.log("Navigating to", route);
     };
 
-    // Tab Navigation Handler
+    // ✅ UPDATED: Tab Navigation Handler
     const handleTabPress = (tabName) => {
         setActiveTab(tabName);
         if (tabName === 'Profile') {
-            router.push('/(main)/profile'); // Navigate to Profile
+            router.push('/(main)/profile'); 
+        } else if (tabName === 'All Products') {
+            router.push('/(main)/allproducts'); // Navigate to All Products
+        } else if (tabName === 'Support') {
+            router.push('/(main)/help'); // Assuming Support maps to Help
         } else if (tabName === 'Home') {
             // Already here
-        } else {
-            // Handle other tabs if needed
-            console.log(`Navigating to ${tabName}`);
         }
     };
 
