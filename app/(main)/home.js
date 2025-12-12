@@ -1,426 +1,318 @@
-import React from 'react';
-import {
-  Dimensions,
-  FlatList,
-  Image,
-  PixelRatio,
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
-// You must have installed these packages: expo install @expo/vector-icons
 import { FontAwesome, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import {
+    Dimensions,
+    Image,
+    ScrollView,
+    StatusBar,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View
+} from 'react-native';
 
-// --- 1. LOCAL COLOR DEFINITIONS ---
+// --- 1. THEME CONFIG (Updated to Red/White) ---
 const Colors = {
-    primary: '#007AFF',       // Blue
-    secondary: '#1A237E',     // Dark Blue for Header
-    accent: '#4CAF50',        // Green
-    warning: '#FFC107',       // Yellow
-    danger: '#DC3545',        // Red
+    primary: '#FF3B30',       // The trendy Red color
+    secondary: '#000000',     // Black for contrast
+    background: '#F9F9F9',    // Clean White/Grey Background
     white: '#FFFFFF',
-    black: '#000000',
-    text: '#333333',
-    textLight: '#999999',
-    whatsappGreen: '#4CAF50',
-    border: '#E0E0E0',
-    lightGrey: '#F8F8F8',
+    text: '#1F2937',
+    textLight: '#9CA3AF',
+    cardDark: '#1C1C1E',      // Dark card background
+    gold: '#FFD700',          // Accent for offers
 };
 
-// --- 2. GLOBAL DIMENSIONS ---
 const { width } = Dimensions.get('window');
-const scale = size => size * PixelRatio.getFontScale();
 
-// --- 3. DUMMY DATA ---
-
-// Grid Menu Data (From your request)
+// --- 2. DATA (Kept same logic, just updated for UI) ---
 const MODULES = [
-    { id: 'lead', title: 'Lead Extractor', icon: 'server-network-outline', type: 'MaterialCommunityIcons', route: 'lead-extractor' },
-    { id: 'poster', title: 'Personalized Poster', icon: 'palette-outline', type: 'Ionicons', route: 'poster-tool' },
-    { id: 'hisab', title: 'Apna Hisab', icon: 'calculator-outline', type: 'Ionicons', route: 'hisab-tool' },
-    { id: 'greetings', title: 'Greetings', icon: 'volume-high-outline', type: 'Ionicons', route: 'greetings-tool' },
-    { id: 'video', title: 'Video', icon: 'videocam-outline', type: 'Ionicons', route: 'video-tool' },
-    { id: 'training', title: 'Training', icon: 'megaphone-outline', type: 'Ionicons', route: 'training-tool' },
-    { id: 'frames', title: 'Frames', icon: 'crop-free', type: 'MaterialCommunityIcons', route: 'frames-tool' },
-    { id: 'congrats', title: 'Congrats', icon: 'medal-outline', type: 'Ionicons', route: 'congrats-tool' },
-    { id: 'invitation', title: 'Invitation', icon: 'mail-outline', type: 'Ionicons', route: 'invitation-tool' },
-    { id: 'certificate', title: 'Certificate', icon: 'certificate-outline', type: 'MaterialCommunityIcons', route: 'certificate-tool' },
-    { id: 'registration', title: 'Registration', icon: 'tablet-cellphone', type: 'MaterialCommunityIcons', route: 'registration-tool' },
-    { id: 'reports', title: 'Reports', icon: 'chart-bar', type: 'FontAwesome', route: 'reports-tool' },
-    { id: 'faq', title: 'FAQ', icon: 'help-circle-outline', type: 'Ionicons', route: 'faq-page' },
-    { id: 'settings', title: 'Settings', icon: 'cog-outline', type: 'Ionicons', route: 'settings-page' },
+    { id: 'lead', title: 'Leads', icon: 'server-network', type: 'MaterialCommunityIcons' },
+    { id: 'poster', title: 'Posters', icon: 'palette', type: 'Ionicons' },
+    { id: 'hisab', title: 'Hisab', icon: 'calculator', type: 'Ionicons' },
+    { id: 'greetings', title: 'Greetings', icon: 'volume-high', type: 'Ionicons' },
+    { id: 'video', title: 'Videos', icon: 'videocam', type: 'Ionicons' },
+    { id: 'frames', title: 'Frames', icon: 'crop-free', type: 'MaterialCommunityIcons' },
+    { id: 'certificate', title: 'Certificates', icon: 'certificate', type: 'MaterialCommunityIcons' },
+    { id: 'training', title: 'Training', icon: 'megaphone', type: 'Ionicons' },
 ];
 
-// Mock Feed Data
-const FEED_ITEMS = [
-    { id: 1, title: 'Mega Diwali Offer', date: '29 Aug', type: 'Festival', image: 'https://via.placeholder.com/150x150/FF6347/FFFFFF?text=Diwali' },
-    { id: 2, title: 'Weekly Business Tips', date: '28 Aug', type: 'Business', image: 'https://via.placeholder.com/150x150/4CAF50/FFFFFF?text=Business' },
-    { id: 3, title: 'Upcoming Webinar Invitation', date: '27 Aug', type: 'Event', image: 'https://via.placeholder.com/150x150/6C63FF/FFFFFF?text=Webinar' },
-    { id: 4, title: 'New Policy Update', date: '26 Aug', type: 'Update', image: 'https://via.placeholder.com/150x150/FFC107/000000?text=Policy' },
-    { id: 5, title: 'Happy Holi Greetings', date: '25 Aug', type: 'Festival', image: 'https://via.placeholder.com/150x150/17A2B8/FFFFFF?text=Holi' },
-    { id: 6, title: 'Client Success Story', date: '24 Aug', type: 'Success', image: 'https://via.placeholder.com/150x150/DC3545/FFFFFF?text=Success' },
+const SPECIAL_OFFER = {
+    title: 'Get Special Offer',
+    discount: '40%',
+    image: 'https://via.placeholder.com/150/000000/FFFFFF?text=Offer', // Replace with your girl image
+};
+
+const FESTIVALS_DATA = [
+    { id: 1, title: 'Diwali', date: '12 Nov', image: 'https://via.placeholder.com/100/FF6347/FFFFFF?text=Diwali' },
+    { id: 2, title: 'Holi', date: '25 Mar', image: 'https://via.placeholder.com/100/FFC0CB/FFFFFF?text=Holi' },
+    { id: 3, title: 'Eid', date: '10 Apr', image: 'https://via.placeholder.com/100/4CAF50/FFFFFF?text=Eid' },
 ];
 
-// Mock Statistics Data
-const STATS_DATA = [
-    { title: 'Total Leads', value: '4,521', icon: 'person-add', color: Colors.primary },
-    { title: 'Posters Created', value: '8,901', icon: 'image', color: Colors.accent },
-    { title: 'Training Views', value: '1,204', icon: 'video', color: Colors.warning },
-    { title: 'Certificates Issued', value: '450', icon: 'medal', color: Colors.secondary },
-];
+// --- 3. SUB-COMPONENTS ---
 
-// --- 4. SUB-COMPONENTS ---
+// Red Header with Location & Notification
+const Header = () => (
+    <View style={styles.headerContainer}>
+        <View style={styles.headerTopRow}>
+            <View>
+                <Text style={styles.locationLabel}>Location</Text>
+                <View style={styles.locationRow}>
+                    <Ionicons name="location-sharp" size={16} color={Colors.white} />
+                    <Text style={styles.locationText}> New York, USA</Text>
+                    <Ionicons name="chevron-down" size={16} color={Colors.white} />
+                </View>
+            </View>
+            <TouchableOpacity style={styles.notificationBtn}>
+                <Ionicons name="notifications" size={20} color={Colors.white} />
+                <View style={styles.badge} />
+            </TouchableOpacity>
+        </View>
 
-// Grid Item Component (for the 3xN menu)
-const GridItem = React.memo(({ title, icon, type, onPress }) => {
-    const IconComponent = type === 'Ionicons' ? Ionicons : (type === 'MaterialCommunityIcons' ? MaterialCommunityIcons : FontAwesome);
-
-    return (
-        <TouchableOpacity style={styles.card} onPress={onPress}>
-            <View style={styles.iconContainer}>
-                <IconComponent 
-                    name={icon} 
-                    size={scale(35)} 
-                    color={Colors.primary} 
+        {/* Search Bar (Overlapping) */}
+        <View style={styles.searchWrapper}>
+            <View style={styles.searchContainer}>
+                <Ionicons name="search" size={20} color={Colors.textLight} />
+                <TextInput 
+                    placeholder="Search..." 
+                    placeholderTextColor={Colors.textLight}
+                    style={styles.searchInput}
                 />
             </View>
-            <Text style={styles.cardTitle}>{title}</Text>
+            <TouchableOpacity style={styles.filterBtn}>
+                <Ionicons name="options-outline" size={20} color={Colors.primary} />
+            </TouchableOpacity>
+        </View>
+    </View>
+);
+
+// SpecialForYou Card (The Black Card)
+const SpecialOfferCard = () => (
+    <View style={styles.sectionContainer}>
+        <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Special For You</Text>
+            <TouchableOpacity><Text style={styles.seeAll}>See All</Text></TouchableOpacity>
+        </View>
+        <View style={styles.offerCard}>
+            <View style={styles.offerContent}>
+                <View style={styles.limitedTag}>
+                    <Text style={styles.limitedText}>Limited time!</Text>
+                </View>
+                <Text style={styles.offerTitle}>{SPECIAL_OFFER.title}</Text>
+                <Text style={styles.offerDiscount}>Up to {SPECIAL_OFFER.discount}</Text>
+                <TouchableOpacity style={styles.claimBtn}>
+                    <Text style={styles.claimText}>Claim</Text>
+                </TouchableOpacity>
+            </View>
+            <Image 
+                source={{ uri: 'https://img.freepik.com/free-photo/portrait-expressive-young-woman-posing_23-2149021815.jpg' }} 
+                style={styles.offerImage} 
+            />
+        </View>
+    </View>
+);
+
+// Circular Category Item
+const CategoryItem = ({ item, onPress }) => {
+    const IconComponent = item.type === 'Ionicons' ? Ionicons : (item.type === 'MaterialCommunityIcons' ? MaterialCommunityIcons : FontAwesome);
+    return (
+        <TouchableOpacity style={styles.categoryItem} onPress={onPress}>
+            <View style={styles.iconCircle}>
+                <IconComponent name={item.icon} size={24} color={Colors.primary} />
+            </View>
+            <Text style={styles.categoryLabel}>{item.title}</Text>
         </TouchableOpacity>
     );
-});
+};
 
-// Mock Analytics/Stats Card Component
-const StatCard = React.memo(({ title, value, icon, color }) => (
-    <View style={[styles.statCard, { borderLeftColor: color }]}>
-        <View>
-            <Text style={styles.statValue}>{value}</Text>
-            <Text style={styles.statTitle}>{title}</Text>
-        </View>
-        <FontAwesome name={icon} size={scale(24)} color={color} />
-    </View>
-));
+// --- 4. MAIN SCREEN ---
+export default function HomeScreen() {
+    const router = useRouter();
 
-// Feed Item Component (for the vertical list at the bottom)
-const FeedItem = React.memo(({ item }) => (
-    <View style={styles.feedItem}>
-        <Image source={{ uri: item.image }} style={styles.feedImage} />
-        <View style={styles.feedContent}>
-            <Text style={styles.feedTitle} numberOfLines={2}>{item.title}</Text>
-            <View style={styles.feedFooter}>
-                <Text style={styles.feedDate}>{item.date}</Text>
-                <View style={[styles.feedTypeChip, { backgroundColor: item.type === 'Festival' ? Colors.danger : Colors.accent }]}>
-                    <Text style={styles.feedTypeChipText}>{item.type}</Text>
-                </View>
-            </View>
-        </View>
-        <Ionicons name="chevron-forward-outline" size={scale(18)} color={Colors.textLight} />
-    </View>
-));
-
-// --- 5. MAIN SCREEN COMPONENT ---
-export default function MegaUIScreen({ navigation }) { // Passing navigation mock for internal use
-    const handleModulePress = (route) => {
-        console.log(`Navigating to: ${route}`);
-        // In a real Expo Router app, you'd use: router.push(`/(main)/${route}`);
+    const handleNavigation = (route) => {
+        console.log("Navigating to", route);
     };
 
-    const renderFeedItem = ({ item }) => <FeedItem item={item} />;
-
     return (
-        <SafeAreaView style={styles.container}>
-            <ScrollView contentContainerStyle={styles.scrollContent}>
+        <View style={styles.container}>
+            <StatusBar barStyle="light-content" backgroundColor={Colors.primary} />
+            
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
                 
-                {/* --- A. HEADER SECTION (Your requested style) --- */}
-                <View style={styles.header}>
-                    <Text style={styles.brandName}>Agent Saathi</Text>
-                    <View style={styles.headerRight}>
-                        <Text style={styles.language}>ENGLISH</Text>
-                        <Ionicons name="caret-down-outline" size={scale(14)} color={Colors.white} style={{ marginLeft: 4 }} />
-                        <TouchableOpacity style={{ marginLeft: 15 }}><Ionicons name="logo-whatsapp" size={scale(24)} color={Colors.whatsappGreen} /></TouchableOpacity>
-                        <TouchableOpacity style={{ marginLeft: 15 }}><Ionicons name="person-circle-outline" size={scale(28)} color={Colors.white} /></TouchableOpacity>
+                {/* 1. Big Red Header */}
+                <Header />
+
+                {/* Spacer because Search bar overlaps */}
+                <View style={{ marginTop: 20 }} />
+
+                {/* 2. Special Offer Card */}
+                <SpecialOfferCard />
+
+                {/* 3. Categories (Grid) */}
+                <View style={styles.sectionContainer}>
+                    <View style={styles.sectionHeader}>
+                        <Text style={styles.sectionTitle}>Category</Text>
+                        <TouchableOpacity><Text style={styles.seeAll}>See All</Text></TouchableOpacity>
                     </View>
-                </View>
-                
-                {/* --- B. STATUS/VIDEO SECTION (Your requested style) --- */}
-                <View style={styles.topSection}>
-                    <Text style={styles.topSectionText}>Today Status Videos</Text>
-                    <TouchableOpacity>
-                        <Text style={styles.viewAllText}>View All</Text>
-                    </TouchableOpacity>
-                </View>
-
-                {/* --- C. ANALYTICS/DASHBOARD SECTION --- */}
-                <View style={styles.sectionHeader}>
-                    <Text style={styles.sectionTitle}>Performance Dashboard</Text>
-                </View>
-                <View style={styles.statsContainer}>
-                    {STATS_DATA.map((stat, index) => (
-                        <StatCard key={index} {...stat} />
-                    ))}
-                </View>
-                
-                <View style={styles.chartPlaceholder}>
-                    <Text style={styles.placeholderText}></Text>
-                </View>
-
-                {/* --- D. GRID MENU SECTION (Your core request) --- */}
-                <View style={[styles.sectionHeader, { marginTop: scale(20) }]}>
-                    <Text style={styles.sectionTitle}>Agent Tools</Text>
-                </View>
-                <View style={styles.gridWrapper}>
-                    <View style={styles.grid}>
-                        {MODULES.map((module) => (
-                            <GridItem 
-                                key={module.id}
-                                title={module.title}
-                                icon={module.icon}
-                                type={module.type}
-                                onPress={() => handleModulePress(module.route)}
-                            />
+                    <View style={styles.categoriesGrid}>
+                        {MODULES.map((item) => (
+                            <CategoryItem key={item.id} item={item} onPress={() => handleNavigation(item.id)} />
                         ))}
                     </View>
                 </View>
-                
-                {/* --- E. NEWS/FEED LIST SECTION --- */}
-                <View style={styles.sectionHeader}>
-                    <Text style={styles.sectionTitle}>Latest Updates & News</Text>
-                    <TouchableOpacity>
-                        <Text style={styles.viewAllText}>More</Text>
-                    </TouchableOpacity>
+
+                {/* 4. Flash Sale / Festivals */}
+                <View style={styles.sectionContainer}>
+                    <View style={styles.sectionHeader}>
+                        <Text style={styles.sectionTitle}>Flash Sale</Text>
+                        <View style={styles.timerTag}>
+                            <Text style={styles.timerText}>Closing in: 02:12:56</Text>
+                        </View>
+                    </View>
+                    
+                    {/* Filter Pills */}
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.pillScroll}>
+                        <TouchableOpacity style={[styles.pill, styles.activePill]}><Text style={styles.activePillText}>All</Text></TouchableOpacity>
+                        <TouchableOpacity style={styles.pill}><Text style={styles.pillText}>Newest</Text></TouchableOpacity>
+                        <TouchableOpacity style={styles.pill}><Text style={styles.pillText}>Popular</Text></TouchableOpacity>
+                        <TouchableOpacity style={styles.pill}><Text style={styles.pillText}>Clothes</Text></TouchableOpacity>
+                    </ScrollView>
+
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 15 }}>
+                        {FESTIVALS_DATA.map((item) => (
+                            <View key={item.id} style={styles.flashCard}>
+                                <Image source={{ uri: item.image }} style={styles.flashImage} />
+                                <TouchableOpacity style={styles.heartBtn}>
+                                    <Ionicons name="heart-outline" size={16} color={Colors.primary} />
+                                </TouchableOpacity>
+                                <Text style={styles.flashTitle}>{item.title}</Text>
+                            </View>
+                        ))}
+                    </ScrollView>
                 </View>
-                
-                <FlatList
-                    data={FEED_ITEMS}
-                    renderItem={renderFeedItem}
-                    keyExtractor={(item) => item.id.toString()}
-                    scrollEnabled={false} // Since it's inside a ScrollView
-                    ItemSeparatorComponent={() => <View style={styles.separator} />}
-                    contentContainerStyle={styles.feedList}
-                />
-                
-                <View style={{ height: 50 }} /> {/* Final padding for content under tabs */}
 
             </ScrollView>
-        </SafeAreaView>
+
+            {/* 5. Custom Bottom Tab Bar (Floating) */}
+            <View style={styles.bottomBar}>
+                <View style={styles.bottomBarItem}>
+                    <View style={styles.activeIconBg}><Ionicons name="home" size={20} color={Colors.primary} /></View>
+                    <Text style={[styles.bottomLabel, { color: Colors.primary }]}>Home</Text>
+                </View>
+                <View style={styles.bottomBarItem}><Ionicons name="heart-outline" size={24} color="#999" /><Text style={styles.bottomLabel}>Wishlist</Text></View>
+                <View style={styles.bottomBarItem}><Ionicons name="cart-outline" size={24} color="#999" /><Text style={styles.bottomLabel}>Cart</Text></View>
+                <View style={styles.bottomBarItem}><Ionicons name="chatbubble-outline" size={24} color="#999" /><Text style={styles.bottomLabel}>Chat</Text></View>
+                <View style={styles.bottomBarItem}><Ionicons name="person-outline" size={24} color="#999" /><Text style={styles.bottomLabel}>Profile</Text></View>
+            </View>
+        </View>
     );
 }
 
-// --- 6. STYLES ---
-
-// Constants for Grid Calculation
-const GRID_PADDING_H = 40; // Total horizontal padding
-const CARD_MARGIN_H = 20; // Margin between cards
-const CARD_SIZE_W = (width - GRID_PADDING_H - 2 * CARD_MARGIN_H) / 3; 
-
+// --- 5. STYLES ---
 const styles = StyleSheet.create({
-    container: {
+    container: { flex: 1, backgroundColor: Colors.background },
+    
+    // Header
+    headerContainer: {
+        backgroundColor: Colors.primary,
+        paddingTop: 50, // Safe area
+        paddingBottom: 30, // Space for search bar overlap
+        paddingHorizontal: 20,
+        borderBottomLeftRadius: 25,
+        borderBottomRightRadius: 25,
+    },
+    headerTopRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
+    locationLabel: { color: 'rgba(255,255,255,0.7)', fontSize: 12 },
+    locationRow: { flexDirection: 'row', alignItems: 'center', marginTop: 4 },
+    locationText: { color: Colors.white, fontSize: 16, fontWeight: '600', marginRight: 5 },
+    notificationBtn: { padding: 8, backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 12 },
+    badge: { position: 'absolute', top: 8, right: 8, width: 8, height: 8, backgroundColor: Colors.gold, borderRadius: 4 },
+
+    // Search Bar
+    searchWrapper: { flexDirection: 'row', alignItems: 'center', marginBottom: -50 }, // Negative margin to overlap
+    searchContainer: {
         flex: 1,
-        backgroundColor: Colors.lightGrey,
-    },
-    scrollContent: {
-        paddingBottom: scale(100), // Extra padding for safe scrolling past the bottom bar
-    },
-
-    // A. HEADER STYLES
-    header: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingHorizontal: scale(20),
-        paddingVertical: scale(15),
-        backgroundColor: Colors.secondary,
-        borderBottomWidth: 1,
-        borderBottomColor: Colors.border,
-    },
-    brandName: {
-        fontSize: scale(18),
-        fontWeight: 'bold',
-        color: Colors.white,
-    },
-    headerRight: {
         flexDirection: 'row',
         alignItems: 'center',
-    },
-    language: {
-        fontSize: scale(14),
-        color: Colors.white,
-        fontWeight: '600',
-    },
-
-    // B. STATUS/VIDEO SECTION STYLES
-    topSection: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingHorizontal: scale(20),
-        paddingVertical: scale(12),
         backgroundColor: Colors.white,
-        borderBottomWidth: 1,
-        borderBottomColor: Colors.border,
+        paddingHorizontal: 15,
+        height: 50,
+        borderRadius: 12,
+        shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 10, elevation: 5,
     },
-    topSectionText: {
-        fontSize: scale(16),
-        color: Colors.text,
-        fontWeight: '600',
-    },
-    viewAllText: {
-        fontSize: scale(14),
-        color: Colors.primary,
-        fontWeight: '500',
+    searchInput: { flex: 1, marginLeft: 10, fontSize: 16, color: Colors.text },
+    filterBtn: {
+        marginLeft: 10,
+        width: 50, height: 50,
+        backgroundColor: Colors.white,
+        justifyContent: 'center', alignItems: 'center',
+        borderRadius: 12,
+        shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 10, elevation: 5,
     },
 
-    // C. ANALYTICS/DASHBOARD STYLES
-    sectionHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingHorizontal: scale(20),
-        marginTop: scale(20),
-        marginBottom: scale(10),
-    },
-    sectionTitle: {
-        fontSize: scale(18),
-        fontWeight: 'bold',
-        color: Colors.text,
-    },
-    statsContainer: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        justifyContent: 'space-between',
-        paddingHorizontal: scale(15),
-    },
-    statCard: {
-        width: '48%',
-        backgroundColor: Colors.white,
-        padding: scale(15),
-        borderRadius: scale(8),
-        marginBottom: scale(10),
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        borderLeftWidth: scale(5),
-        elevation: 1,
-    },
-    statValue: {
-        fontSize: scale(20),
-        fontWeight: 'bold',
-        color: Colors.text,
-    },
-    statTitle: {
-        fontSize: scale(12),
-        color: Colors.textLight,
-        marginTop: scale(4),
-    },
-    chartPlaceholder: {
-        marginHorizontal: scale(20),
-        height: scale(150),
-        backgroundColor: Colors.white,
-        borderRadius: scale(8),
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderWidth: 1,
-        borderColor: Colors.border,
-        marginTop: scale(10),
-    },
-    placeholderText: {
-        color: Colors.textLight,
-        fontStyle: 'italic',
-        fontSize: scale(14),
-    },
+    // Sections
+    sectionContainer: { marginTop: 25, paddingHorizontal: 20 },
+    sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15 },
+    sectionTitle: { fontSize: 18, fontWeight: 'bold', color: Colors.text },
+    seeAll: { color: Colors.primary, fontSize: 13, fontWeight: '600' },
 
-    // D. GRID MENU STYLES
-    gridWrapper: {
-        paddingHorizontal: scale(20),
-        paddingVertical: scale(10),
-    },
-    grid: {
+    // Special Offer Card
+    offerCard: {
+        backgroundColor: Colors.cardDark,
+        borderRadius: 20,
+        height: 160,
         flexDirection: 'row',
-        flexWrap: 'wrap',
-        justifyContent: 'space-between',
-        backgroundColor: Colors.white, 
-        borderRadius: scale(10),
-        padding: scale(10),
-        elevation: 5, 
-        shadowColor: Colors.black,
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 5,
+        overflow: 'hidden',
+        padding: 20,
     },
-    card: {
-        width: CARD_SIZE_W,
-        height: CARD_SIZE_W + scale(20), 
-        marginBottom: scale(20),
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    iconContainer: {
-        width: scale(60),
-        height: scale(60),
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: Colors.lightGrey,
-        borderRadius: scale(12),
-        marginBottom: scale(8),
-    },
-    cardTitle: {
-        fontSize: scale(12),
-        textAlign: 'center',
-        color: Colors.text,
-        fontWeight: '500',
-    },
+    offerContent: { flex: 1, justifyContent: 'center' },
+    limitedTag: { backgroundColor: Colors.white, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12, alignSelf: 'flex-start', marginBottom: 10 },
+    limitedText: { fontSize: 10, fontWeight: 'bold' },
+    offerTitle: { color: Colors.white, fontSize: 18, fontWeight: 'bold' },
+    offerDiscount: { color: Colors.white, fontSize: 24, fontWeight: 'bold', marginVertical: 5 },
+    claimBtn: { backgroundColor: Colors.primary, paddingVertical: 8, paddingHorizontal: 20, borderRadius: 20, alignSelf: 'flex-start' },
+    claimText: { color: Colors.white, fontWeight: 'bold', fontSize: 12 },
+    offerImage: { width: 120, height: 160, resizeMode: 'cover', position: 'absolute', right: -20, bottom: -20 },
 
-    // E. NEWS/FEED LIST STYLES
-    feedList: {
-        paddingHorizontal: scale(20),
+    // Categories
+    categoriesGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
+    categoryItem: { width: '22%', alignItems: 'center', marginBottom: 15 },
+    iconCircle: {
+        width: 55, height: 55,
+        backgroundColor: '#FFF0F0', // Very light red
+        borderRadius: 27.5,
+        justifyContent: 'center', alignItems: 'center',
+        marginBottom: 8,
     },
-    feedItem: {
-        flexDirection: 'row',
+    categoryLabel: { fontSize: 12, color: Colors.text, textAlign: 'center', fontWeight: '500' },
+
+    // Flash Sale
+    timerTag: { flexDirection: 'row', alignItems: 'center' },
+    timerText: { fontSize: 12, color: Colors.primary, fontWeight: '600' },
+    pillScroll: { marginBottom: 15 },
+    pill: { paddingHorizontal: 20, paddingVertical: 8, borderRadius: 20, borderWidth: 1, borderColor: '#E5E5E5', marginRight: 10 },
+    activePill: { backgroundColor: Colors.primary, borderColor: Colors.primary },
+    pillText: { color: Colors.textLight },
+    activePillText: { color: Colors.white, fontWeight: 'bold' },
+    
+    flashCard: { width: 140, marginRight: 15, backgroundColor: Colors.white, padding: 10, borderRadius: 15, elevation: 2 },
+    flashImage: { width: 120, height: 100, borderRadius: 10, alignSelf: 'center' },
+    flashTitle: { marginTop: 10, fontWeight: 'bold', fontSize: 14 },
+    heartBtn: { position: 'absolute', top: 10, right: 10, backgroundColor: Colors.white, padding: 5, borderRadius: 15, elevation: 2 },
+
+    // Bottom Bar
+    bottomBar: {
+        position: 'absolute', bottom: 20, left: 20, right: 20,
         backgroundColor: Colors.white,
-        paddingVertical: scale(15),
-        alignItems: 'center',
-    },
-    feedImage: {
-        width: scale(60),
-        height: scale(60),
-        borderRadius: scale(8),
-        marginRight: scale(15),
-    },
-    feedContent: {
-        flex: 1,
-        justifyContent: 'center',
-    },
-    feedTitle: {
-        fontSize: scale(15),
-        fontWeight: '600',
-        color: Colors.text,
-        marginBottom: scale(4),
-    },
-    feedFooter: {
+        borderRadius: 25,
+        height: 70,
         flexDirection: 'row',
+        justifyContent: 'space-around',
         alignItems: 'center',
-        marginTop: scale(2),
+        shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 10, elevation: 10,
     },
-    feedDate: {
-        fontSize: scale(12),
-        color: Colors.textLight,
-        marginRight: scale(10),
-    },
-    feedTypeChip: {
-        paddingHorizontal: scale(8),
-        paddingVertical: scale(3),
-        borderRadius: scale(4),
-    },
-    feedTypeChipText: {
-        fontSize: scale(10),
-        color: Colors.white,
-        fontWeight: 'bold',
-    },
-    separator: {
-        height: 1,
-        backgroundColor: Colors.border,
-        marginHorizontal: scale(20),
-    }
+    bottomBarItem: { alignItems: 'center' },
+    activeIconBg: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#FFF0F0', justifyContent: 'center', alignItems: 'center', marginBottom: 2 },
+    bottomLabel: { fontSize: 10, color: '#999' },
 });
