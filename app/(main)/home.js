@@ -1,97 +1,172 @@
 import { FontAwesome, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { useEffect, useState } from 'react';
 import {
-    Dimensions,
     Image,
+    LayoutAnimation,
+    Platform,
     ScrollView,
     StatusBar,
     StyleSheet,
     Text,
     TextInput,
     TouchableOpacity,
+    UIManager,
     View
 } from 'react-native';
 
-// --- 1. THEME CONFIG (Updated to Red/White) ---
+// Enable LayoutAnimation for Android
+if (Platform.OS === 'android') {
+    if (UIManager.setLayoutAnimationEnabledExperimental) {
+        UIManager.setLayoutAnimationEnabledExperimental(true);
+    }
+}
+
+// --- 1. THEME CONFIG ---
 const Colors = {
-    primary: '#FF3B30',       // The trendy Red color
-    secondary: '#000000',     // Black for contrast
-    background: '#F9F9F9',    // Clean White/Grey Background
+    primary: '#FF3B30',       // Red
+    secondary: '#000000',     // Black
+    background: '#F9F9F9',    // White/Grey
     white: '#FFFFFF',
     text: '#1F2937',
     textLight: '#9CA3AF',
     cardDark: '#1C1C1E',      // Dark card background
-    gold: '#FFD700',          // Accent for offers
+    premiumBg: '#2C0E37',     // Dark Purple/Navy for Premium Section (from reference)
+    gold: '#FFD700',
+    silver: '#C0C0C0',
+    platinum: '#E5E4E2',
+    lightRed: '#FFF0F0',
+    navBarBg: '#111111',
 };
 
-const { width } = Dimensions.get('window');
+// --- 2. DATA ---
+const STORIES_DATA = [
+    { id: 1, title: 'New', image: 'https://images.unsplash.com/photo-1511367461989-f85a21fda167?auto=format&fit=crop&w=100&q=80' },
+    { id: 2, title: 'Offers', image: 'https://images.unsplash.com/photo-1572584642822-6f8de0243c93?auto=format&fit=crop&w=150&q=80' },
+    { id: 3, title: 'Diwali', image: 'https://images.unsplash.com/photo-1607083206869-4c7672e72a8a?auto=format&fit=crop&w=150&q=80' },
+    { id: 4, title: 'Winners', image: 'https://images.unsplash.com/photo-1517457373958-b7bdd4587205?auto=format&fit=crop&w=150&q=80' },
+    { id: 5, title: 'Updates', image: 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=150&q=80' },
+];
 
-// --- 2. DATA (Kept same logic, just updated for UI) ---
 const MODULES = [
-    { id: 'lead', title: 'Leads', icon: 'server-network', type: 'MaterialCommunityIcons' },
     { id: 'poster', title: 'Posters', icon: 'palette', type: 'Ionicons' },
-    { id: 'hisab', title: 'Hisab', icon: 'calculator', type: 'Ionicons' },
-    { id: 'greetings', title: 'Greetings', icon: 'volume-high', type: 'Ionicons' },
     { id: 'video', title: 'Videos', icon: 'videocam', type: 'Ionicons' },
-    { id: 'frames', title: 'Frames', icon: 'crop-free', type: 'MaterialCommunityIcons' },
-    { id: 'certificate', title: 'Certificates', icon: 'certificate', type: 'MaterialCommunityIcons' },
-    { id: 'training', title: 'Training', icon: 'megaphone', type: 'Ionicons' },
+    { id: 'greetings', title: 'Greetings', icon: 'sunny', type: 'Ionicons' },
+    { id: 'brochures', title: 'Brochures', icon: 'newspaper', type: 'Ionicons' },
+    { id: 'lic', title: 'LIC Plans', icon: 'shield-checkmark', type: 'Ionicons' },
+    { id: 'business_card', title: 'Business', icon: 'card', type: 'Ionicons' },
+    { id: 'motivation', title: 'Motivation', icon: 'bulb', type: 'Ionicons' },
+    { id: 'certificate', title: 'Certificates', icon: 'ribbon', type: 'Ionicons' },
 ];
 
 const SPECIAL_OFFER = {
     title: 'Get Special Offer',
     discount: '40%',
-    image: 'https://via.placeholder.com/150/000000/FFFFFF?text=Offer', // Replace with your girl image
+    image: 'https://img.freepik.com/free-photo/portrait-expressive-young-woman-posing_23-2149021815.jpg', 
 };
 
 const FESTIVALS_DATA = [
-    { id: 1, title: 'Diwali', date: '12 Nov', image: 'https://via.placeholder.com/100/FF6347/FFFFFF?text=Diwali' },
-    { id: 2, title: 'Holi', date: '25 Mar', image: 'https://via.placeholder.com/100/FFC0CB/FFFFFF?text=Holi' },
-    { id: 3, title: 'Eid', date: '10 Apr', image: 'https://via.placeholder.com/100/4CAF50/FFFFFF?text=Eid' },
+    { id: 1, title: 'Diwali', image: 'https://via.placeholder.com/100/FF6347/FFFFFF?text=Diwali' },
+    { id: 2, title: 'Holi', image: 'https://via.placeholder.com/100/FFC0CB/FFFFFF?text=Holi' },
+    { id: 3, title: 'Eid', image: 'https://via.placeholder.com/100/4CAF50/FFFFFF?text=Eid' },
+];
+
+// SUBSCRIPTION PLANS DATA
+const SUBSCRIPTION_PLANS = [
+    { 
+        id: 'silver', 
+        name: 'Silver Plan', 
+        price: '₹499/mo', 
+        color: Colors.silver, 
+        features: ['50 Premium Posters', 'No Watermark', 'Basic Support'] 
+    },
+    { 
+        id: 'gold', 
+        name: 'Gold Plan', 
+        price: '₹999/mo', 
+        color: Colors.gold, 
+        features: ['Unlimited Posters', 'Video Maker Access', 'Priority Support', 'No Ads'] 
+    },
+    { 
+        id: 'platinum', 
+        name: 'Platinum Plan', 
+        price: '₹1499/mo', 
+        color: Colors.platinum, 
+        features: ['All Gold Features', 'Source Files Included', 'Personal Account Manager', 'Custom Branding'] 
+    },
 ];
 
 // --- 3. SUB-COMPONENTS ---
 
-// Red Header with Location & Notification
-const Header = () => (
-    <View style={styles.headerContainer}>
-        <View style={styles.headerTopRow}>
-            <View>
-                <Text style={styles.locationLabel}>Location</Text>
-                <View style={styles.locationRow}>
-                    <Ionicons name="location-sharp" size={16} color={Colors.white} />
-                    <Text style={styles.locationText}> New York, USA</Text>
-                    <Ionicons name="chevron-down" size={16} color={Colors.white} />
-                </View>
-            </View>
-            <TouchableOpacity style={styles.notificationBtn}>
-                <Ionicons name="notifications" size={20} color={Colors.white} />
-                <View style={styles.badge} />
-            </TouchableOpacity>
-        </View>
+const Header = () => {
+    const [greeting, setGreeting] = useState('');
 
-        {/* Search Bar (Overlapping) */}
-        <View style={styles.searchWrapper}>
-            <View style={styles.searchContainer}>
-                <Ionicons name="search" size={20} color={Colors.textLight} />
-                <TextInput 
-                    placeholder="Search..." 
-                    placeholderTextColor={Colors.textLight}
-                    style={styles.searchInput}
-                />
+    useEffect(() => {
+        const getGreeting = () => {
+            const hour = new Date().getHours();
+            if (hour < 12) return 'Good Morning ☀️';
+            if (hour < 17) return 'Good Afternoon 🌤️';
+            return 'Good Evening 🌙';
+        };
+        setGreeting(getGreeting());
+    }, []);
+
+    return (
+        <View style={styles.headerContainer}>
+            <View style={styles.headerTopRow}>
+                <View style={styles.profileContainer}>
+                    <Image 
+                        source={{ uri: 'https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=100&q=80' }} 
+                        style={styles.headerProfileImage} 
+                    />
+                    <View style={styles.profileTextContainer}>
+                        <Text style={styles.welcomeLabel}>{greeting}</Text>
+                        <Text style={styles.userNameText}>Tharamac User</Text>
+                    </View>
+                </View>
+
+                <TouchableOpacity style={styles.notificationBtn}>
+                    <Ionicons name="notifications" size={20} color={Colors.white} />
+                    <View style={styles.badge} />
+                </TouchableOpacity>
             </View>
-            <TouchableOpacity style={styles.filterBtn}>
-                <Ionicons name="options-outline" size={20} color={Colors.primary} />
-            </TouchableOpacity>
+
+            <View style={styles.searchWrapper}>
+                <View style={styles.searchContainer}>
+                    <Ionicons name="search" size={20} color={Colors.textLight} />
+                    <TextInput 
+                        placeholder="Search..." 
+                        placeholderTextColor={Colors.textLight}
+                        style={styles.searchInput}
+                    />
+                </View>
+                <TouchableOpacity style={styles.filterBtn}>
+                    <Ionicons name="options-outline" size={20} color={Colors.primary} />
+                </TouchableOpacity>
+            </View>
         </View>
+    );
+};
+
+const StoriesSection = () => (
+    <View style={styles.storiesContainer}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 15 }}>
+            {STORIES_DATA.map((story) => (
+                <TouchableOpacity key={story.id} style={styles.storyItem}>
+                    <View style={styles.storyCircle}>
+                        <Image source={{ uri: story.image }} style={styles.storyImage} />
+                    </View>
+                    <Text style={styles.storyLabel}>{story.title}</Text>
+                </TouchableOpacity>
+            ))}
+        </ScrollView>
     </View>
 );
 
-// SpecialForYou Card (The Black Card)
 const SpecialOfferCard = () => (
     <View style={styles.sectionContainer}>
         <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Special For You</Text>
+            <Text style={styles.sectionTitle}>#SpecialForYou</Text>
             <TouchableOpacity><Text style={styles.seeAll}>See All</Text></TouchableOpacity>
         </View>
         <View style={styles.offerCard}>
@@ -105,15 +180,11 @@ const SpecialOfferCard = () => (
                     <Text style={styles.claimText}>Claim</Text>
                 </TouchableOpacity>
             </View>
-            <Image 
-                source={{ uri: 'https://img.freepik.com/free-photo/portrait-expressive-young-woman-posing_23-2149021815.jpg' }} 
-                style={styles.offerImage} 
-            />
+            <Image source={{ uri: SPECIAL_OFFER.image }} style={styles.offerImage} />
         </View>
     </View>
 );
 
-// Circular Category Item
 const CategoryItem = ({ item, onPress }) => {
     const IconComponent = item.type === 'Ionicons' ? Ionicons : (item.type === 'MaterialCommunityIcons' ? MaterialCommunityIcons : FontAwesome);
     return (
@@ -126,30 +197,103 @@ const CategoryItem = ({ item, onPress }) => {
     );
 };
 
+// --- NEW: Subscription Accordion Component ---
+const SubscriptionSection = () => {
+    const [expandedId, setExpandedId] = useState(null);
+
+    const toggleExpand = (id) => {
+        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+        setExpandedId(expandedId === id ? null : id);
+    };
+
+    return (
+        <View style={styles.sectionContainer}>
+            <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>Premium Plans</Text>
+            </View>
+            
+            {/* Premium Card Container */}
+            <View style={styles.premiumCard}>
+                <View style={styles.premiumHeader}>
+                    <Ionicons name="diamond-outline" size={28} color={Colors.white} />
+                    <Text style={styles.premiumTitle}>Upgrade to Pro</Text>
+                    <Text style={styles.premiumSubtitle}>Unlock exclusive features today!</Text>
+                </View>
+
+                {SUBSCRIPTION_PLANS.map((plan) => {
+                    const isExpanded = expandedId === plan.id;
+                    return (
+                        <View key={plan.id} style={styles.planContainer}>
+                            <TouchableOpacity 
+                                style={[styles.planHeader, isExpanded && styles.planHeaderActive, { borderColor: plan.color }]} 
+                                onPress={() => toggleExpand(plan.id)}
+                                activeOpacity={0.9}
+                            >
+                                <View style={styles.planInfo}>
+                                    <View style={[styles.planIcon, { backgroundColor: plan.color }]}>
+                                        <MaterialCommunityIcons name="crown" size={16} color={Colors.secondary} />
+                                    </View>
+                                    <View>
+                                        <Text style={[styles.planName, { color: plan.color }]}>{plan.name}</Text>
+                                        <Text style={styles.planPrice}>{plan.price}</Text>
+                                    </View>
+                                </View>
+                                <Ionicons 
+                                    name={isExpanded ? "chevron-up" : "chevron-down"} 
+                                    size={20} 
+                                    color={Colors.white} 
+                                />
+                            </TouchableOpacity>
+
+                            {/* Accordion Content */}
+                            {isExpanded && (
+                                <View style={styles.planDetails}>
+                                    {plan.features.map((feature, index) => (
+                                        <View key={index} style={styles.featureRow}>
+                                            <Ionicons name="checkmark-circle" size={16} color={plan.color} />
+                                            <Text style={styles.featureText}>{feature}</Text>
+                                        </View>
+                                    ))}
+                                    <TouchableOpacity style={[styles.subscribeBtn, { backgroundColor: plan.color }]}>
+                                        <Text style={styles.subscribeText}>Subscribe Now</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            )}
+                        </View>
+                    );
+                })}
+            </View>
+        </View>
+    );
+};
+
+
 // --- 4. MAIN SCREEN ---
 export default function HomeScreen() {
     const router = useRouter();
+    const [activeTab, setActiveTab] = useState('Home'); // Track active tab
 
     const handleNavigation = (route) => {
         console.log("Navigating to", route);
     };
 
+    const tabs = [
+        { name: 'Home', icon: 'home-outline', activeIcon: 'home' },
+        { name: 'All Products', icon: 'grid-outline', activeIcon: 'grid' },
+        { name: 'Support', icon: 'headset-outline', activeIcon: 'headset' },
+        { name: 'Profile', icon: 'person-outline', activeIcon: 'person' },
+    ];
+
     return (
         <View style={styles.container}>
             <StatusBar barStyle="light-content" backgroundColor={Colors.primary} />
             
-            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
-                
-                {/* 1. Big Red Header */}
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
                 <Header />
-
-                {/* Spacer because Search bar overlaps */}
-                <View style={{ marginTop: 20 }} />
-
-                {/* 2. Special Offer Card */}
+                <View style={{ marginTop: 25 }} />
+                <StoriesSection />
                 <SpecialOfferCard />
-
-                {/* 3. Categories (Grid) */}
+                
                 <View style={styles.sectionContainer}>
                     <View style={styles.sectionHeader}>
                         <Text style={styles.sectionTitle}>Category</Text>
@@ -161,8 +305,7 @@ export default function HomeScreen() {
                         ))}
                     </View>
                 </View>
-
-                {/* 4. Flash Sale / Festivals */}
+                
                 <View style={styles.sectionContainer}>
                     <View style={styles.sectionHeader}>
                         <Text style={styles.sectionTitle}>Flash Sale</Text>
@@ -170,15 +313,6 @@ export default function HomeScreen() {
                             <Text style={styles.timerText}>Closing in: 02:12:56</Text>
                         </View>
                     </View>
-                    
-                    {/* Filter Pills */}
-                    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.pillScroll}>
-                        <TouchableOpacity style={[styles.pill, styles.activePill]}><Text style={styles.activePillText}>All</Text></TouchableOpacity>
-                        <TouchableOpacity style={styles.pill}><Text style={styles.pillText}>Newest</Text></TouchableOpacity>
-                        <TouchableOpacity style={styles.pill}><Text style={styles.pillText}>Popular</Text></TouchableOpacity>
-                        <TouchableOpacity style={styles.pill}><Text style={styles.pillText}>Clothes</Text></TouchableOpacity>
-                    </ScrollView>
-
                     <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 15 }}>
                         {FESTIVALS_DATA.map((item) => (
                             <View key={item.id} style={styles.flashCard}>
@@ -192,19 +326,36 @@ export default function HomeScreen() {
                     </ScrollView>
                 </View>
 
+                {/* --- NEW SUBSCRIPTION SECTION ADDED HERE --- */}
+                <SubscriptionSection />
+                
             </ScrollView>
 
-            {/* 5. Custom Bottom Tab Bar (Floating) */}
-            <View style={styles.bottomBar}>
-                <View style={styles.bottomBarItem}>
-                    <View style={styles.activeIconBg}><Ionicons name="home" size={20} color={Colors.primary} /></View>
-                    <Text style={[styles.bottomLabel, { color: Colors.primary }]}>Home</Text>
+            {/* Dark Floating Bottom Bar with 4 Options */}
+            <View style={styles.bottomBarContainer}>
+                <View style={styles.bottomBar}>
+                    {tabs.map((tab) => {
+                        const isActive = activeTab === tab.name;
+                        return (
+                            <TouchableOpacity 
+                                key={tab.name} 
+                                style={styles.tabItem} 
+                                onPress={() => setActiveTab(tab.name)}
+                                activeOpacity={0.8}
+                            >
+                                {isActive ? (
+                                    <View style={styles.activeTabCircle}>
+                                        <Ionicons name={tab.activeIcon} size={24} color={Colors.secondary} />
+                                    </View>
+                                ) : (
+                                    <Ionicons name={tab.icon} size={24} color="#888" />
+                                )}
+                            </TouchableOpacity>
+                        );
+                    })}
                 </View>
-                <View style={styles.bottomBarItem}><Ionicons name="heart-outline" size={24} color="#999" /><Text style={styles.bottomLabel}>Wishlist</Text></View>
-                <View style={styles.bottomBarItem}><Ionicons name="cart-outline" size={24} color="#999" /><Text style={styles.bottomLabel}>Cart</Text></View>
-                <View style={styles.bottomBarItem}><Ionicons name="chatbubble-outline" size={24} color="#999" /><Text style={styles.bottomLabel}>Chat</Text></View>
-                <View style={styles.bottomBarItem}><Ionicons name="person-outline" size={24} color="#999" /><Text style={styles.bottomLabel}>Profile</Text></View>
             </View>
+
         </View>
     );
 }
@@ -216,56 +367,48 @@ const styles = StyleSheet.create({
     // Header
     headerContainer: {
         backgroundColor: Colors.primary,
-        paddingTop: 50, // Safe area
-        paddingBottom: 30, // Space for search bar overlap
+        paddingTop: 50,
+        paddingBottom: 30,
         paddingHorizontal: 20,
         borderBottomLeftRadius: 25,
         borderBottomRightRadius: 25,
     },
     headerTopRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
-    locationLabel: { color: 'rgba(255,255,255,0.7)', fontSize: 12 },
-    locationRow: { flexDirection: 'row', alignItems: 'center', marginTop: 4 },
-    locationText: { color: Colors.white, fontSize: 16, fontWeight: '600', marginRight: 5 },
+    profileContainer: { flexDirection: 'row', alignItems: 'center' },
+    headerProfileImage: { width: 45, height: 45, borderRadius: 22.5, borderWidth: 2, borderColor: Colors.white },
+    profileTextContainer: { marginLeft: 12 },
+    welcomeLabel: { color: 'rgba(255,255,255,0.9)', fontSize: 12, fontWeight: '500' },
+    userNameText: { color: Colors.white, fontSize: 18, fontWeight: 'bold', marginTop: 2 },
     notificationBtn: { padding: 8, backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 12 },
     badge: { position: 'absolute', top: 8, right: 8, width: 8, height: 8, backgroundColor: Colors.gold, borderRadius: 4 },
 
-    // Search Bar
-    searchWrapper: { flexDirection: 'row', alignItems: 'center', marginBottom: -50 }, // Negative margin to overlap
+    // Search
+    searchWrapper: { flexDirection: 'row', alignItems: 'center', marginBottom: -50 },
     searchContainer: {
-        flex: 1,
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: Colors.white,
-        paddingHorizontal: 15,
-        height: 50,
-        borderRadius: 12,
+        flex: 1, flexDirection: 'row', alignItems: 'center', backgroundColor: Colors.white,
+        paddingHorizontal: 15, height: 50, borderRadius: 12,
         shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 10, elevation: 5,
     },
     searchInput: { flex: 1, marginLeft: 10, fontSize: 16, color: Colors.text },
     filterBtn: {
-        marginLeft: 10,
-        width: 50, height: 50,
-        backgroundColor: Colors.white,
-        justifyContent: 'center', alignItems: 'center',
-        borderRadius: 12,
+        marginLeft: 10, width: 50, height: 50, backgroundColor: Colors.white,
+        justifyContent: 'center', alignItems: 'center', borderRadius: 12,
         shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 10, elevation: 5,
     },
 
-    // Sections
-    sectionContainer: { marginTop: 25, paddingHorizontal: 20 },
+    // Stories & Sections
+    storiesContainer: { marginTop: 30, marginBottom: 10 },
+    storyItem: { alignItems: 'center', marginRight: 15 },
+    storyCircle: { width: 65, height: 65, borderRadius: 32.5, borderWidth: 2, borderColor: Colors.primary, justifyContent: 'center', alignItems: 'center', padding: 2 },
+    storyImage: { width: '100%', height: '100%', borderRadius: 30 },
+    storyLabel: { marginTop: 5, fontSize: 11, color: Colors.text, fontWeight: '500' },
+    sectionContainer: { marginTop: 20, paddingHorizontal: 20 },
     sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15 },
     sectionTitle: { fontSize: 18, fontWeight: 'bold', color: Colors.text },
     seeAll: { color: Colors.primary, fontSize: 13, fontWeight: '600' },
 
-    // Special Offer Card
-    offerCard: {
-        backgroundColor: Colors.cardDark,
-        borderRadius: 20,
-        height: 160,
-        flexDirection: 'row',
-        overflow: 'hidden',
-        padding: 20,
-    },
+    // Cards
+    offerCard: { backgroundColor: Colors.cardDark, borderRadius: 20, height: 160, flexDirection: 'row', overflow: 'hidden', padding: 20 },
     offerContent: { flex: 1, justifyContent: 'center' },
     limitedTag: { backgroundColor: Colors.white, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12, alignSelf: 'flex-start', marginBottom: 10 },
     limitedText: { fontSize: 10, fontWeight: 'bold' },
@@ -275,44 +418,108 @@ const styles = StyleSheet.create({
     claimText: { color: Colors.white, fontWeight: 'bold', fontSize: 12 },
     offerImage: { width: 120, height: 160, resizeMode: 'cover', position: 'absolute', right: -20, bottom: -20 },
 
-    // Categories
     categoriesGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
-    categoryItem: { width: '22%', alignItems: 'center', marginBottom: 15 },
-    iconCircle: {
-        width: 55, height: 55,
-        backgroundColor: '#FFF0F0', // Very light red
-        borderRadius: 27.5,
-        justifyContent: 'center', alignItems: 'center',
-        marginBottom: 8,
-    },
-    categoryLabel: { fontSize: 12, color: Colors.text, textAlign: 'center', fontWeight: '500' },
+    categoryItem: { width: '22%', alignItems: 'center', marginBottom: 20 },
+    iconCircle: { width: 55, height: 55, backgroundColor: Colors.lightRed, borderRadius: 27.5, justifyContent: 'center', alignItems: 'center', marginBottom: 8 },
+    categoryLabel: { fontSize: 11, color: Colors.text, textAlign: 'center', fontWeight: '500' },
 
-    // Flash Sale
     timerTag: { flexDirection: 'row', alignItems: 'center' },
     timerText: { fontSize: 12, color: Colors.primary, fontWeight: '600' },
-    pillScroll: { marginBottom: 15 },
-    pill: { paddingHorizontal: 20, paddingVertical: 8, borderRadius: 20, borderWidth: 1, borderColor: '#E5E5E5', marginRight: 10 },
-    activePill: { backgroundColor: Colors.primary, borderColor: Colors.primary },
-    pillText: { color: Colors.textLight },
-    activePillText: { color: Colors.white, fontWeight: 'bold' },
-    
     flashCard: { width: 140, marginRight: 15, backgroundColor: Colors.white, padding: 10, borderRadius: 15, elevation: 2 },
     flashImage: { width: 120, height: 100, borderRadius: 10, alignSelf: 'center' },
     flashTitle: { marginTop: 10, fontWeight: 'bold', fontSize: 14 },
     heartBtn: { position: 'absolute', top: 10, right: 10, backgroundColor: Colors.white, padding: 5, borderRadius: 15, elevation: 2 },
 
-    // Bottom Bar
-    bottomBar: {
-        position: 'absolute', bottom: 20, left: 20, right: 20,
-        backgroundColor: Colors.white,
-        borderRadius: 25,
-        height: 70,
-        flexDirection: 'row',
-        justifyContent: 'space-around',
-        alignItems: 'center',
-        shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 10, elevation: 10,
+    // --- SUBSCRIPTION STYLES (NEW) ---
+    premiumCard: {
+        backgroundColor: Colors.premiumBg,
+        borderRadius: 20,
+        padding: 20,
+        marginBottom: 20,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 5 },
+        shadowOpacity: 0.2,
+        shadowRadius: 10,
+        elevation: 8,
     },
-    bottomBarItem: { alignItems: 'center' },
-    activeIconBg: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#FFF0F0', justifyContent: 'center', alignItems: 'center', marginBottom: 2 },
-    bottomLabel: { fontSize: 10, color: '#999' },
+    premiumHeader: { alignItems: 'center', marginBottom: 20 },
+    premiumTitle: { color: Colors.white, fontSize: 22, fontWeight: 'bold', marginTop: 10 },
+    premiumSubtitle: { color: 'rgba(255,255,255,0.7)', fontSize: 12, marginTop: 5 },
+    
+    planContainer: {
+        marginBottom: 12,
+        backgroundColor: 'rgba(255,255,255,0.05)',
+        borderRadius: 12,
+        overflow: 'hidden',
+    },
+    planHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: 15,
+        borderWidth: 1,
+        borderColor: 'transparent',
+        borderRadius: 12,
+    },
+    planHeaderActive: {
+        backgroundColor: 'rgba(255,255,255,0.1)',
+        borderWidth: 1,
+    },
+    planInfo: { flexDirection: 'row', alignItems: 'center' },
+    planIcon: { width: 30, height: 30, borderRadius: 15, justifyContent: 'center', alignItems: 'center', marginRight: 12 },
+    planName: { fontSize: 16, fontWeight: 'bold' },
+    planPrice: { color: 'rgba(255,255,255,0.7)', fontSize: 12 },
+    
+    planDetails: { padding: 15, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.1)' },
+    featureRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
+    featureText: { color: Colors.white, fontSize: 13, marginLeft: 8 },
+    subscribeBtn: { marginTop: 15, paddingVertical: 12, borderRadius: 8, alignItems: 'center' },
+    subscribeText: { color: Colors.secondary, fontWeight: 'bold', fontSize: 14 },
+
+    // --- BOTTOM BAR STYLES ---
+    bottomBarContainer: {
+        position: 'absolute',
+        bottom: 30,
+        left: 0,
+        right: 0,
+        alignItems: 'center',
+        paddingHorizontal: 20,
+    },
+    bottomBar: {
+        flexDirection: 'row',
+        backgroundColor: Colors.navBarBg, // Dark Background
+        borderRadius: 35,
+        height: 70,
+        width: '100%',
+        justifyContent: 'space-around', 
+        alignItems: 'center',
+        paddingHorizontal: 10,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 10 },
+        shadowOpacity: 0.3,
+        shadowRadius: 20,
+        elevation: 15,
+    },
+    tabItem: {
+        width: 60, 
+        height: 70,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    activeTabCircle: {
+        width: 55,
+        height: 55,
+        borderRadius: 30,
+        backgroundColor: Colors.primary, // Red Circle
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 35, 
+        borderWidth: 4,
+        borderColor: Colors.background, 
+        shadowColor: Colors.primary,
+        shadowOffset: { width: 0, height: 5 },
+        shadowOpacity: 0.5,
+        shadowRadius: 10,
+        elevation: 10,
+    },
 });
