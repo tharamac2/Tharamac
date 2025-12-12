@@ -208,7 +208,7 @@ const StoriesSection = ({ onStoryPress }) => (
 const SpecialScrollSection = () => (
     <View style={styles.sectionContainer}>
         <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Special For You</Text>
+            <Text style={styles.sectionTitle}>#SpecialForYou</Text>
             <TouchableOpacity><Text style={styles.seeAll}>See All</Text></TouchableOpacity>
         </View>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingRight: 20 }}>
@@ -308,6 +308,19 @@ export default function HomeScreen() {
         console.log("Navigating to", route);
     };
 
+    // Tab Navigation Handler
+    const handleTabPress = (tabName) => {
+        setActiveTab(tabName);
+        if (tabName === 'Profile') {
+            router.push('/(main)/profile'); // Navigate to Profile
+        } else if (tabName === 'Home') {
+            // Already here
+        } else {
+            // Handle other tabs if needed
+            console.log(`Navigating to ${tabName}`);
+        }
+    };
+
     const tabs = [
         { name: 'Home', icon: 'home-outline', activeIcon: 'home' },
         { name: 'All Products', icon: 'grid-outline', activeIcon: 'grid' },
@@ -339,8 +352,6 @@ export default function HomeScreen() {
                     </View>
                 </View>
                 
-                {/* --- FLASH SALE REMOVED HERE --- */}
-
                 <SubscriptionSection />
                 
             </ScrollView>
@@ -353,7 +364,7 @@ export default function HomeScreen() {
                             <TouchableOpacity 
                                 key={tab.name} 
                                 style={styles.tabItem} 
-                                onPress={() => setActiveTab(tab.name)}
+                                onPress={() => handleTabPress(tab.name)} // Updated Handler
                                 activeOpacity={0.8}
                             >
                                 {isActive ? (
@@ -503,6 +514,13 @@ const styles = StyleSheet.create({
     categoryItem: { width: '22%', alignItems: 'center', marginBottom: 20 },
     iconCircle: { width: 55, height: 55, backgroundColor: Colors.lightRed, borderRadius: 27.5, justifyContent: 'center', alignItems: 'center', marginBottom: 8 },
     categoryLabel: { fontSize: 11, color: Colors.text, textAlign: 'center', fontWeight: '500' },
+
+    timerTag: { flexDirection: 'row', alignItems: 'center' },
+    timerText: { fontSize: 12, color: Colors.primary, fontWeight: '600' },
+    flashCard: { width: 140, marginRight: 15, backgroundColor: Colors.white, padding: 10, borderRadius: 15, elevation: 2 },
+    flashImage: { width: 120, height: 100, borderRadius: 10, alignSelf: 'center' },
+    flashTitle: { marginTop: 10, fontWeight: 'bold', fontSize: 14 },
+    heartBtn: { position: 'absolute', top: 10, right: 10, backgroundColor: Colors.white, padding: 5, borderRadius: 15, elevation: 2 },
 
     premiumCard: { backgroundColor: Colors.premiumBg, borderRadius: 20, padding: 20, marginBottom: 20, shadowColor: '#000', shadowOffset: { width: 0, height: 5 }, shadowOpacity: 0.2, shadowRadius: 10, elevation: 8 },
     premiumHeader: { alignItems: 'center', marginBottom: 20 },
