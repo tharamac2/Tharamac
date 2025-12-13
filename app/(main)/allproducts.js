@@ -1,3 +1,4 @@
+// allproducts.js (top part is already correct)
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useContext, useState } from 'react';
@@ -14,6 +15,8 @@ import {
     View
 } from 'react-native';
 import { UserContext } from '../../src/context/UserContext';
+import { ALL_PRODUCTS } from '../../src/data/products'; // after you move data
+
 
 // --- DATA: CATEGORIES ---
 const CATEGORIES = [
