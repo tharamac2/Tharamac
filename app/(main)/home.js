@@ -1,6 +1,6 @@
 import { FontAwesome, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
+import { useFocusEffect, useRouter } from 'expo-router'; // ✅ Added useFocusEffect
+import { useCallback, useContext, useEffect, useRef, useState } from 'react'; // ✅ Added useCallback
 import {
     Animated,
     Dimensions,
@@ -17,6 +17,8 @@ import {
     UIManager,
     View
 } from 'react-native';
+// Import Context
+import { UserContext } from '../../src/context/UserContext';
 
 // Enable LayoutAnimation for Android
 if (Platform.OS === 'android') {
@@ -27,15 +29,12 @@ if (Platform.OS === 'android') {
 
 const { width, height } = Dimensions.get('window');
 
-// --- 1. THEME CONFIG ---
+// --- 1. STATIC COLORS ---
 const Colors = {
     primary: '#FF3B30',       // Red
     secondary: '#000000',     // Black
-    background: '#F9F9F9',    // White/Grey
     white: '#FFFFFF',
-    text: '#1F2937',
-    textLight: '#9CA3AF',
-    cardDark: '#1C1C1E',      // Dark card background
+    cardDark: '#1C1C1E',      
     premiumBg: '#2C0E37',     
     gold: '#FFD700',
     silver: '#C0C0C0',
@@ -104,6 +103,7 @@ const SUBSCRIPTION_PLANS = [
 // --- 3. SUB-COMPONENTS ---
 
 const Header = () => {
+    const { userData, theme } = useContext(UserContext);
     const [greeting, setGreeting] = useState('');
 
     useEffect(() => {
@@ -120,10 +120,10 @@ const Header = () => {
         <View style={styles.headerContainer}>
             <View style={styles.headerTopRow}>
                 <View style={styles.profileContainer}>
-                    <Image source={{ uri: 'https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=100&q=80' }} style={styles.headerProfileImage} />
+                    <Image source={{ uri: userData.profileImage }} style={styles.headerProfileImage} />
                     <View style={styles.profileTextContainer}>
                         <Text style={styles.welcomeLabel}>{greeting}</Text>
-                        <Text style={styles.userNameText}>Tharamac User</Text>
+                        <Text style={styles.userNameText}>{userData.name || 'Tharamac User'}</Text>
                     </View>
                 </View>
                 <TouchableOpacity style={styles.notificationBtn}>
@@ -132,12 +132,16 @@ const Header = () => {
                 </TouchableOpacity>
             </View>
 
-            <View style={styles.searchWrapper}>
-                <View style={styles.searchContainer}>
-                    <Ionicons name="search" size={20} color={Colors.textLight} />
-                    <TextInput placeholder="Search..." placeholderTextColor={Colors.textLight} style={styles.searchInput} />
+            <View style={[styles.searchWrapper, { marginTop: 15 }]}>
+                <View style={[styles.searchContainer, { backgroundColor: theme.inputBg }]}>
+                    <Ionicons name="search" size={20} color={theme.textLight} />
+                    <TextInput 
+                        placeholder="Search..." 
+                        placeholderTextColor={theme.textLight} 
+                        style={[styles.searchInput, { color: theme.text }]} 
+                    />
                 </View>
-                <TouchableOpacity style={styles.filterBtn}>
+                <TouchableOpacity style={[styles.filterBtn, { backgroundColor: theme.inputBg }]}>
                     <Ionicons name="options-outline" size={20} color={Colors.primary} />
                 </TouchableOpacity>
             </View>
@@ -145,7 +149,6 @@ const Header = () => {
     );
 };
 
-// --- Story Viewer Component ---
 const StoryViewer = ({ story, onClose }) => {
     const progress = useRef(new Animated.Value(0)).current;
 
@@ -190,25 +193,25 @@ const StoryViewer = ({ story, onClose }) => {
     );
 };
 
-const StoriesSection = ({ onStoryPress }) => (
+const StoriesSection = ({ onStoryPress, theme }) => (
     <View style={styles.storiesContainer}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 15 }}>
             {STORIES_DATA.map((story) => (
                 <TouchableOpacity key={story.id} style={styles.storyItem} onPress={() => onStoryPress(story)}>
-                    <View style={styles.storyCircle}>
+                    <View style={[styles.storyCircle, { borderColor: Colors.primary }]}>
                         <Image source={{ uri: story.image }} style={styles.storyImage} />
                     </View>
-                    <Text style={styles.storyLabel}>{story.title}</Text>
+                    <Text style={[styles.storyLabel, { color: theme.text }]}>{story.title}</Text>
                 </TouchableOpacity>
             ))}
         </ScrollView>
     </View>
 );
 
-const SpecialScrollSection = () => (
+const SpecialScrollSection = ({ theme }) => (
     <View style={styles.sectionContainer}>
         <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>#SpecialForYou</Text>
+            <Text style={[styles.sectionTitle, { color: theme.text }]}>#SpecialForYou</Text>
             <TouchableOpacity><Text style={styles.seeAll}>See All</Text></TouchableOpacity>
         </View>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingRight: 20 }}>
@@ -231,19 +234,19 @@ const SpecialScrollSection = () => (
     </View>
 );
 
-const CategoryItem = ({ item, onPress }) => {
+const CategoryItem = ({ item, onPress, theme }) => {
     const IconComponent = item.type === 'Ionicons' ? Ionicons : (item.type === 'MaterialCommunityIcons' ? MaterialCommunityIcons : FontAwesome);
     return (
         <TouchableOpacity style={styles.categoryItem} onPress={onPress}>
-            <View style={styles.iconCircle}>
+            <View style={[styles.iconCircle, { backgroundColor: theme.isDarkMode ? '#333' : Colors.lightRed }]}>
                 <IconComponent name={item.icon} size={24} color={Colors.primary} />
             </View>
-            <Text style={styles.categoryLabel}>{item.title}</Text>
+            <Text style={[styles.categoryLabel, { color: theme.text }]}>{item.title}</Text>
         </TouchableOpacity>
     );
 };
 
-const SubscriptionSection = () => {
+const SubscriptionSection = ({ theme }) => {
     const [expandedId, setExpandedId] = useState(null);
     const toggleExpand = (id) => {
         LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
@@ -253,7 +256,7 @@ const SubscriptionSection = () => {
     return (
         <View style={styles.sectionContainer}>
             <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>Premium Plans</Text>
+                <Text style={[styles.sectionTitle, { color: theme.text }]}>Premium Plans</Text>
             </View>
             <View style={styles.premiumCard}>
                 <View style={styles.premiumHeader}>
@@ -301,25 +304,26 @@ const SubscriptionSection = () => {
 // --- 4. MAIN SCREEN ---
 export default function HomeScreen() {
     const router = useRouter();
+    const { theme, isDarkMode } = useContext(UserContext); 
     const [activeTab, setActiveTab] = useState('Home'); 
     const [activeStory, setActiveStory] = useState(null);
+
+    // ✅ FIXED: Reset active tab to 'Home' when screen comes into focus
+    useFocusEffect(
+        useCallback(() => {
+            setActiveTab('Home');
+        }, [])
+    );
 
     const handleNavigation = (route) => {
         console.log("Navigating to", route);
     };
 
-    // ✅ UPDATED: Tab Navigation Handler
     const handleTabPress = (tabName) => {
         setActiveTab(tabName);
-        if (tabName === 'Profile') {
-            router.push('/(main)/profile'); 
-        } else if (tabName === 'All Products') {
-            router.push('/(main)/allproducts'); // Navigate to All Products
-        } else if (tabName === 'Support') {
-            router.push('/(main)/help'); // Assuming Support maps to Help
-        } else if (tabName === 'Home') {
-            // Already here
-        }
+        if (tabName === 'Profile') router.push('/(main)/profile'); 
+        else if (tabName === 'All Products') router.push('/(main)/allproducts'); 
+        else if (tabName === 'Support') router.push('/(main)/help'); 
     };
 
     const tabs = [
@@ -330,42 +334,41 @@ export default function HomeScreen() {
     ];
 
     return (
-        <View style={styles.container}>
-            <StatusBar barStyle="light-content" backgroundColor={Colors.primary} />
+        <View style={[styles.container, { backgroundColor: theme.background }]}>
+            <StatusBar 
+                barStyle={theme.statusBarStyle} 
+                backgroundColor="transparent" 
+                translucent={true} 
+            />
             
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
                 <Header />
                 <View style={{ marginTop: 25 }} />
-                
-                <StoriesSection onStoryPress={(story) => setActiveStory(story)} />
-                
-                <SpecialScrollSection />
-                
+                <StoriesSection onStoryPress={(story) => setActiveStory(story)} theme={theme} />
+                <SpecialScrollSection theme={theme} />
                 <View style={styles.sectionContainer}>
                     <View style={styles.sectionHeader}>
-                        <Text style={styles.sectionTitle}>Category</Text>
+                        <Text style={[styles.sectionTitle, { color: theme.text }]}>Category</Text>
                         <TouchableOpacity><Text style={styles.seeAll}>See All</Text></TouchableOpacity>
                     </View>
                     <View style={styles.categoriesGrid}>
                         {MODULES.map((item) => (
-                            <CategoryItem key={item.id} item={item} onPress={() => handleNavigation(item.id)} />
+                            <CategoryItem key={item.id} item={item} onPress={() => handleNavigation(item.id)} theme={theme} />
                         ))}
                     </View>
                 </View>
-                
-                <SubscriptionSection />
-                
+                <SubscriptionSection theme={theme} />
             </ScrollView>
 
             <View style={styles.bottomBarContainer}>
-                <View style={styles.bottomBar}>
+                <View style={[styles.bottomBar, { backgroundColor: isDarkMode ? '#1E1E1E' : Colors.navBarBg }]}>
                     {tabs.map((tab) => {
                         const isActive = activeTab === tab.name;
                         return (
                             <TouchableOpacity 
                                 key={tab.name} 
                                 style={styles.tabItem} 
-                                onPress={() => handleTabPress(tab.name)} // Updated Handler
+                                onPress={() => handleTabPress(tab.name)} 
                                 activeOpacity={0.8}
                             >
                                 {isActive ? (
@@ -381,7 +384,6 @@ export default function HomeScreen() {
                 </View>
             </View>
 
-            {/* RENDER STORY VIEWER IF ACTIVE */}
             {activeStory && (
                 <StoryViewer 
                     story={activeStory} 
@@ -395,12 +397,12 @@ export default function HomeScreen() {
 
 // --- 5. STYLES ---
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: Colors.background },
+    container: { flex: 1 }, 
     
     // Header
     headerContainer: {
         backgroundColor: Colors.primary,
-        paddingTop: 50,
+        paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight + 10 : 50,
         paddingBottom: 30,
         paddingHorizontal: 20,
         borderBottomLeftRadius: 25,
@@ -416,15 +418,15 @@ const styles = StyleSheet.create({
     badge: { position: 'absolute', top: 8, right: 8, width: 8, height: 8, backgroundColor: Colors.gold, borderRadius: 4 },
 
     // Search
-    searchWrapper: { flexDirection: 'row', alignItems: 'center', marginBottom: -50 },
+    searchWrapper: { flexDirection: 'row', alignItems: 'center' },
     searchContainer: {
-        flex: 1, flexDirection: 'row', alignItems: 'center', backgroundColor: Colors.white,
+        flex: 1, flexDirection: 'row', alignItems: 'center', 
         paddingHorizontal: 15, height: 50, borderRadius: 12,
         shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 10, elevation: 5,
     },
-    searchInput: { flex: 1, marginLeft: 10, fontSize: 16, color: Colors.text },
+    searchInput: { flex: 1, marginLeft: 10, fontSize: 16 },
     filterBtn: {
-        marginLeft: 10, width: 50, height: 50, backgroundColor: Colors.white,
+        marginLeft: 10, width: 50, height: 50, 
         justifyContent: 'center', alignItems: 'center', borderRadius: 12,
         shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 10, elevation: 5,
     },
@@ -432,75 +434,28 @@ const styles = StyleSheet.create({
     // Stories
     storiesContainer: { marginTop: 30, marginBottom: 10 },
     storyItem: { alignItems: 'center', marginRight: 15 },
-    storyCircle: { width: 65, height: 65, borderRadius: 32.5, borderWidth: 2, borderColor: Colors.primary, justifyContent: 'center', alignItems: 'center', padding: 2 },
+    storyCircle: { width: 65, height: 65, borderRadius: 32.5, borderWidth: 2, justifyContent: 'center', alignItems: 'center', padding: 2 },
     storyImage: { width: '100%', height: '100%', borderRadius: 30 },
-    storyLabel: { marginTop: 5, fontSize: 11, color: Colors.text, fontWeight: '500' },
+    storyLabel: { marginTop: 5, fontSize: 11, fontWeight: '500' },
 
-    // Story Viewer Styles
-    fullStoryContainer: {
-        flex: 1,
-        backgroundColor: '#000',
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    fullStoryImage: {
-        width: width,
-        height: height,
-        position: 'absolute',
-    },
-    storyHeader: {
-        position: 'absolute',
-        top: 50,
-        left: 0,
-        right: 0,
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingHorizontal: 20,
-        zIndex: 10,
-    },
-    storyUser: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    storyUserImage: {
-        width: 35,
-        height: 35,
-        borderRadius: 17.5,
-        borderWidth: 1,
-        borderColor: '#FFF',
-    },
-    storyUserName: {
-        color: '#FFF',
-        fontWeight: 'bold',
-        marginLeft: 10,
-        fontSize: 16,
-    },
-    closeStoryBtn: {
-        padding: 5,
-    },
-    progressBarContainer: {
-        position: 'absolute',
-        top: 40,
-        left: 10,
-        right: 10,
-        height: 3,
-        backgroundColor: 'rgba(255,255,255,0.3)',
-        borderRadius: 2,
-        zIndex: 10,
-    },
-    progressBar: {
-        height: '100%',
-        backgroundColor: '#FFF',
-        borderRadius: 2,
-    },
+    // Story Viewer
+    fullStoryContainer: { flex: 1, backgroundColor: '#000', justifyContent: 'center', alignItems: 'center' },
+    fullStoryImage: { width: width, height: height, position: 'absolute' },
+    storyHeader: { position: 'absolute', top: 50, left: 0, right: 0, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, zIndex: 10 },
+    storyUser: { flexDirection: 'row', alignItems: 'center' },
+    storyUserImage: { width: 35, height: 35, borderRadius: 17.5, borderWidth: 1, borderColor: '#FFF' },
+    storyUserName: { color: '#FFF', fontWeight: 'bold', marginLeft: 10, fontSize: 16 },
+    closeStoryBtn: { padding: 5 },
+    progressBarContainer: { position: 'absolute', top: 40, left: 10, right: 10, height: 3, backgroundColor: 'rgba(255,255,255,0.3)', borderRadius: 2, zIndex: 10 },
+    progressBar: { height: '100%', backgroundColor: '#FFF', borderRadius: 2 },
 
     // Sections
     sectionContainer: { marginTop: 20, paddingHorizontal: 20 },
     sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15 },
-    sectionTitle: { fontSize: 18, fontWeight: 'bold', color: Colors.text },
+    sectionTitle: { fontSize: 18, fontWeight: 'bold' },
     seeAll: { color: Colors.primary, fontSize: 13, fontWeight: '600' },
 
+    // Scroll Card
     scrollCard: { width: 280, height: 160, backgroundColor: Colors.cardDark, borderRadius: 20, marginRight: 15, flexDirection: 'row', overflow: 'hidden', padding: 20, position: 'relative' },
     scrollCardContent: { flex: 1, justifyContent: 'center', zIndex: 2 },
     limitedTag: { backgroundColor: Colors.white, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12, alignSelf: 'flex-start', marginBottom: 10 },
@@ -511,18 +466,13 @@ const styles = StyleSheet.create({
     claimText: { color: Colors.white, fontWeight: 'bold', fontSize: 12 },
     scrollImage: { width: 140, height: 180, resizeMode: 'cover', position: 'absolute', right: -30, bottom: -20, transform: [{ rotate: '-10deg' }] },
 
+    // Category
     categoriesGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
     categoryItem: { width: '22%', alignItems: 'center', marginBottom: 20 },
-    iconCircle: { width: 55, height: 55, backgroundColor: Colors.lightRed, borderRadius: 27.5, justifyContent: 'center', alignItems: 'center', marginBottom: 8 },
-    categoryLabel: { fontSize: 11, color: Colors.text, textAlign: 'center', fontWeight: '500' },
+    iconCircle: { width: 55, height: 55, borderRadius: 27.5, justifyContent: 'center', alignItems: 'center', marginBottom: 8 },
+    categoryLabel: { fontSize: 11, textAlign: 'center', fontWeight: '500' },
 
-    timerTag: { flexDirection: 'row', alignItems: 'center' },
-    timerText: { fontSize: 12, color: Colors.primary, fontWeight: '600' },
-    flashCard: { width: 140, marginRight: 15, backgroundColor: Colors.white, padding: 10, borderRadius: 15, elevation: 2 },
-    flashImage: { width: 120, height: 100, borderRadius: 10, alignSelf: 'center' },
-    flashTitle: { marginTop: 10, fontWeight: 'bold', fontSize: 14 },
-    heartBtn: { position: 'absolute', top: 10, right: 10, backgroundColor: Colors.white, padding: 5, borderRadius: 15, elevation: 2 },
-
+    // Premium Card
     premiumCard: { backgroundColor: Colors.premiumBg, borderRadius: 20, padding: 20, marginBottom: 20, shadowColor: '#000', shadowOffset: { width: 0, height: 5 }, shadowOpacity: 0.2, shadowRadius: 10, elevation: 8 },
     premiumHeader: { alignItems: 'center', marginBottom: 20 },
     premiumTitle: { color: Colors.white, fontSize: 22, fontWeight: 'bold', marginTop: 10 },
@@ -540,8 +490,9 @@ const styles = StyleSheet.create({
     subscribeBtn: { marginTop: 15, paddingVertical: 12, borderRadius: 8, alignItems: 'center' },
     subscribeText: { color: Colors.secondary, fontWeight: 'bold', fontSize: 14 },
 
+    // Bottom Bar
     bottomBarContainer: { position: 'absolute', bottom: 30, left: 0, right: 0, alignItems: 'center', paddingHorizontal: 20 },
-    bottomBar: { flexDirection: 'row', backgroundColor: Colors.navBarBg, borderRadius: 35, height: 70, width: '100%', justifyContent: 'space-around', alignItems: 'center', paddingHorizontal: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.3, shadowRadius: 20, elevation: 15 },
+    bottomBar: { flexDirection: 'row', borderRadius: 35, height: 70, width: '100%', justifyContent: 'space-around', alignItems: 'center', paddingHorizontal: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.3, shadowRadius: 20, elevation: 15 },
     tabItem: { width: 60, height: 70, justifyContent: 'center', alignItems: 'center' },
     activeTabCircle: { width: 55, height: 55, borderRadius: 30, backgroundColor: Colors.primary, justifyContent: 'center', alignItems: 'center', marginBottom: 35, borderWidth: 4, borderColor: Colors.background, shadowColor: Colors.primary, shadowOffset: { width: 0, height: 5 }, shadowOpacity: 0.5, shadowRadius: 10, elevation: 10 },
 });
