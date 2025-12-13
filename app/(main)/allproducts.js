@@ -28,7 +28,7 @@ const CATEGORIES = [
     { id: 'Certificates', title: 'Certificates' },
 ];
 
-// --- DATA: STANDARD PRODUCTS (Grid View) ---
+// --- DATA: STANDARD PRODUCTS (Grid View & Thumbnails) ---
 const ALL_PRODUCTS = [
     { id: '1', title: 'Diwali Festival', category: 'Posters', image: 'https://images.unsplash.com/photo-1511367461989-f85a21fda167?w=400&q=80' },
     { id: '2', title: 'New Year 2025', category: 'Videos', image: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=400&q=80' },
@@ -41,7 +41,7 @@ const ALL_PRODUCTS = [
     { id: '9', title: 'Holi Special', category: 'Posters', image: 'https://images.unsplash.com/photo-1615967676759-994c6328325e?w=400&q=80' },
 ];
 
-// --- DATA: CALENDAR 2026 (Posters & Videos) ---
+// --- DATA: CALENDAR 2026 ---
 const CALENDAR_DATA_2026 = [
     {
         title: 'JANUARY',
@@ -266,41 +266,14 @@ const GREETINGS_DATA = [
             { date: 'Anytime', name: "New Job / Promotion Wishes" },
         ]
     },
-    {
-        title: 'March',
-        data: [{ date: 'Mar 8', name: "International Women’s Day" }]
-    },
-    {
-        title: 'April',
-        data: [{ date: 'Apr 7', name: "World Health Day" }]
-    },
-    {
-        title: 'May',
-        data: [{ date: 'May 10', name: "Mother's Day" }]
-    },
-    {
-        title: 'June',
-        data: [
-            { date: 'Jun 5', name: "World Environment Day" },
-            { date: 'Jun 21', name: "Father's Day" },
-        ]
-    },
-    {
-        title: 'July',
-        data: [{ date: 'Jul 1', name: "Doctor’s Day" }]
-    },
-    {
-        title: 'August',
-        data: [{ date: 'Aug 21', name: "World Senior Citizens Day" }]
-    },
-    {
-        title: 'September',
-        data: [{ date: 'Sep 5', name: "Teacher's Day" }]
-    },
-    {
-        title: 'November',
-        data: [{ date: 'Nov 14', name: "Children’s Day" }]
-    },
+    { title: 'March', data: [{ date: 'Mar 8', name: "International Women’s Day" }] },
+    { title: 'April', data: [{ date: 'Apr 7', name: "World Health Day" }] },
+    { title: 'May', data: [{ date: 'May 10', name: "Mother's Day" }] },
+    { title: 'June', data: [{ date: 'Jun 5', name: "World Environment Day" }, { date: 'Jun 21', name: "Father's Day" }] },
+    { title: 'July', data: [{ date: 'Jul 1', name: "Doctor’s Day" }] },
+    { title: 'August', data: [{ date: 'Aug 21', name: "World Senior Citizens Day" }] },
+    { title: 'September', data: [{ date: 'Sep 5', name: "Teacher's Day" }] },
+    { title: 'November', data: [{ date: 'Nov 14', name: "Children’s Day" }] },
 ];
 
 // --- DATA: LIC PLANS LIST ---
@@ -330,13 +303,7 @@ const LIC_DATA = [
             { date: 'Plan 881', name: "Bima Lakshmi" },
         ]
     },
-    {
-        title: '3. Whole Life Plans',
-        data: [
-            { date: 'Plan 745', name: "Jeevan Umang" },
-            { date: 'Plan 771', name: "Jeevan Utsav" },
-        ]
-    },
+    { title: '3. Whole Life Plans', data: [{ date: 'Plan 745', name: "Jeevan Umang" }, { date: 'Plan 771', name: "Jeevan Utsav" }] },
     {
         title: '4. Term Assurance (Pure Life Cover)',
         data: [
@@ -351,45 +318,117 @@ const LIC_DATA = [
     },
 ];
 
-// --- NEW DATA: BUSINESS LIST ---
+// --- DATA: BUSINESS LIST ---
 const BUSINESS_DATA = [
     {
         title: 'Growth & Strategy',
         data: [
-            { date: 'Biz Quote', name: "Motivational Quote for Entrepreneurs" },
-            { date: 'Pro Tip', name: "Tip of the Day" },
-            { date: 'Daily Insp', name: "Daily Business Inspiration" },
-            { date: 'How To', name: "How-To Tips & Hacks" },
+            { date: '1', name: "Motivational Quote for Entrepreneurs" },
+            { date: '2', name: "Tip of the Day" },
+            { date: '3', name: "Daily Business Inspiration" },
+            { date: '4', name: "How-To Tips & Hacks" },
         ]
     },
     {
         title: 'Marketing & Promotion',
         data: [
-            { date: 'New Launch', name: "New Service Launch" },
-            { date: 'Hot Sale', name: "Seasonal Offer / Sale" },
-            { date: 'Show Case', name: "Product Showcase" },
-            { date: 'Top Pick', name: "Service Highlight" },
+            { date: '5', name: "New Service Launch" },
+            { date: '6', name: "Seasonal Offer / Sale" },
+            { date: '7', name: "Product Showcase" },
+            { date: '8', name: "Service Highlight" },
         ]
     },
     {
         title: 'Brand & Community',
         data: [
-            { date: 'User Review', name: "Client Testimonial" },
-            { date: 'Our Team', name: "Team Spotlight" },
-            { date: 'BTS View', name: "Behind-the-Scenes" },
-            { date: 'Big Win', name: "Business Milestone" },
+            { date: '9', name: "Client Testimonial" },
+            { date: '10', name: "Team Spotlight" },
+            { date: '11', name: "Behind-the-Scenes" },
+            { date: '12', name: "Business Milestone" },
         ]
     },
     {
         title: 'Industry Insights',
         data: [
-            { date: 'Key Stat', name: "Industry Fact / Statistic" },
-            { date: 'New Trend', name: "Market Trend Alert" },
-            { date: 'Save Date', name: "Upcoming Event Reminder" },
+            { date: '13', name: "Industry Fact / Statistic" },
+            { date: '14', name: "Market Trend Alert" },
+            { date: '15', name: "Upcoming Event Reminder" },
         ]
     }
 ];
 
+// --- DATA: CERTIFICATES LIST ---
+const CERTIFICATES_DATA = [
+    {
+        title: 'Employee Recognition',
+        data: [
+            { date: '1', name: "Employee of the Month Certificate" },
+            { date: '2', name: "Best Team Member Certificate" },
+            { date: '3', name: "Top Performer Certificate" },
+            { date: '4', name: "Leadership Award Certificate" },
+        ]
+    },
+    {
+        title: 'Training & Education',
+        data: [
+            { date: '5', name: "Participation Certificate" },
+            { date: '6', name: "Achievement Certificate" },
+            { date: '7', name: "Certification of Completion" },
+            { date: '8', name: "Training Completion Certificate" },
+            { date: '9', name: "Online Course Certificate" },
+        ]
+    },
+    {
+        title: 'Awards & Appreciation',
+        data: [
+            { date: '10', name: "Excellence Award Certificate" },
+            { date: '11', name: "Customer Appreciation Certificate" },
+            { date: '12', name: "Innovation / Creativity Certificate" },
+            { date: '13', name: "Volunteer Appreciation Certificate" },
+            { date: '14', name: "Special Recognition Certificate" },
+            { date: '15', name: "Motivational / Inspirational Certificate" },
+        ]
+    }
+];
+
+// --- DATA: MOTIVATION LIST ---
+const MOTIVATION_DATA = [
+    {
+        title: 'Daily Inspiration',
+        data: [
+            { date: '1', name: "Daily Quote" },
+            { date: '2', name: "Morning Inspiration" },
+            { date: '3', name: "Daily Affirmation" },
+            { date: '4', name: "Positive Thinking Reminder" },
+        ]
+    },
+    {
+        title: 'Mindset & Growth',
+        data: [
+            { date: '5', name: "Success Mantra" },
+            { date: '6', name: "Overcoming Failure" },
+            { date: '7', name: "Mindset Shift Poster" },
+            { date: '8', name: "Success Story Highlight" },
+        ]
+    },
+    {
+        title: 'Discipline & Goals',
+        data: [
+            { date: '9', name: "Goal Setting Tip" },
+            { date: '10', name: "Work Hard / Dream Big" },
+            { date: '11', name: "Self-Discipline Tip" },
+            { date: '12', name: "Time Management Tip" },
+            { date: '13', name: "Overcome Procrastination" },
+        ]
+    },
+    {
+        title: 'Success & Wellness',
+        data: [
+            { date: '14', name: "Entrepreneur Motivation" },
+            { date: '15', name: "Health + Motivation" },
+        ]
+    }
+];
 export default function AllProductsScreen() {
     const router = useRouter();
     const { theme } = useContext(UserContext); 
@@ -404,7 +443,6 @@ export default function AllProductsScreen() {
         return matchesCategory && matchesSearch;
     });
 
-    // --- Navigation Handler ---
     const handleUseProduct = (item) => {
         router.push({
             pathname: '/(main)/product-details',
@@ -412,28 +450,27 @@ export default function AllProductsScreen() {
                 id: item.id || Math.random().toString(), 
                 category: item.category || selectedCategory, 
                 title: item.title || item.name, 
-                // Default images
-                image: item.image || (selectedCategory === 'Videos' 
-                    ? 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=400&q=80' 
-                    : 'https://images.unsplash.com/photo-1557683316-973673baf926?w=400&q=80') 
+                image: item.image || 'https://images.unsplash.com/photo-1557683316-973673baf926?w=400&q=80' 
             }
         });
     };
 
-    // --- Determine which List Data to show ---
+    // --- Helper to get list data ---
     const getListData = () => {
         if (selectedCategory === 'Greetings') return GREETINGS_DATA;
         if (selectedCategory === 'LIC Plans') return LIC_DATA;
-        if (selectedCategory === 'Business') return BUSINESS_DATA; // ✅ Added Business Data
+        if (selectedCategory === 'Business') return BUSINESS_DATA;
+        if (selectedCategory === 'Certificates') return CERTIFICATES_DATA;
+        if (selectedCategory === 'Motivation') return MOTIVATION_DATA;
         if (selectedCategory === 'Posters' || selectedCategory === 'Videos') return CALENDAR_DATA_2026;
         return [];
     };
 
-    // ✅ Added 'Business' to list view check
-    const isListView = ['Posters', 'Videos', 'Greetings', 'LIC Plans', 'Business'].includes(selectedCategory);
+    const isListView = ['Posters', 'Videos', 'Greetings', 'LIC Plans', 'Business', 'Certificates', 'Motivation'].includes(selectedCategory);
 
-    // --- Render Category Chip ---
-    const renderCategory = ({ item }) => {
+    // --- COMPONENTS ---
+
+    const renderCategoryChip = ({ item }) => {
         const isSelected = selectedCategory === item.id;
         return (
             <TouchableOpacity 
@@ -446,12 +483,27 @@ export default function AllProductsScreen() {
                 ]}
                 onPress={() => setSelectedCategory(item.id)}
             >
-                <Text style={[
-                    styles.categoryText, 
-                    { color: isSelected ? '#FFF' : theme.text }
-                ]}>
+                <Text style={[styles.categoryText, { color: isSelected ? '#FFF' : theme.text }]}>
                     {item.title}
                 </Text>
+            </TouchableOpacity>
+        );
+    };
+
+    // --- 1. NEW: Category Card for "All" Tab Grid ---
+    const renderCategoryCard = ({ item }) => {
+        // Use the image from CATEGORIES array, not from ALL_PRODUCTS search
+        const repImage = item.image || 'https://images.unsplash.com/photo-1557683316-973673baf926?w=400&q=80';
+
+        return (
+            <TouchableOpacity 
+                style={[styles.categoryCard, { backgroundColor: theme.surface }]}
+                onPress={() => setSelectedCategory(item.id)}
+            >
+                <Image source={{ uri: repImage }} style={styles.catCardImage} />
+                <View style={styles.catCardOverlay}>
+                    <Text style={styles.catCardTitle}>{item.title}</Text>
+                </View>
             </TouchableOpacity>
         );
     };
@@ -470,15 +522,15 @@ export default function AllProductsScreen() {
         </TouchableOpacity>
     );
 
-    // --- Render List Item (Shared for Calendar, Greetings, LIC, Business) ---
+    // --- Render List Item (Shared) ---
     const renderListItem = ({ item }) => (
         <View style={[styles.calendarItem, { backgroundColor: theme.surface, borderColor: theme.border }]}>
             <View style={styles.dateBox}>
                 <Text style={[styles.dateText, { color: theme.primary }]}>
-                    {item.date.includes(' ') ? item.date.split(' ')[1] : ''}
+                    {item.date.includes(' ') ? item.date.split(' ')[1] : item.date.substring(0, 3)}
                 </Text>
                 <Text style={[styles.monthText, { color: theme.textLight }]}>
-                    {item.date.includes(' ') ? item.date.split(' ')[0] : item.date}
+                    {item.date.includes(' ') ? item.date.split(' ')[0] : item.date.substring(3)}
                 </Text>
             </View>
             <View style={styles.eventInfo}>
@@ -521,7 +573,7 @@ export default function AllProductsScreen() {
             <View style={styles.categoryContainer}>
                 <FlatList
                     data={CATEGORIES}
-                    renderItem={renderCategory}
+                    renderItem={renderCategoryChip}
                     keyExtractor={item => item.id}
                     horizontal
                     showsHorizontalScrollIndicator={false}
@@ -529,9 +581,20 @@ export default function AllProductsScreen() {
                 />
             </View>
 
-            {/* CONDITIONAL CONTENT */}
-            {isListView ? (
-                // 1. Show List View
+            {/* MAIN CONTENT AREA */}
+            {selectedCategory === 'All' ? (
+                // 1. Show Grid of Categories when "All" is selected
+                <FlatList
+                    data={CATEGORIES.filter(c => c.id !== 'All')}
+                    renderItem={renderCategoryCard}
+                    keyExtractor={item => item.id}
+                    numColumns={2}
+                    columnWrapperStyle={styles.gridWrapper}
+                    contentContainerStyle={styles.gridContent}
+                    showsVerticalScrollIndicator={false}
+                />
+            ) : isListView ? (
+                // 2. Show List View for specific categories (Calendar/Lists)
                 <SectionList
                     sections={getListData()}
                     keyExtractor={(item, index) => item.name + index}
@@ -545,7 +608,7 @@ export default function AllProductsScreen() {
                     showsVerticalScrollIndicator={false}
                 />
             ) : (
-                // 2. Show Grid for Everything Else
+                // 3. Show Grid for other product types (e.g. Brochures if not in list)
                 <FlatList
                     data={filteredProducts}
                     renderItem={renderProduct}
@@ -566,26 +629,27 @@ export default function AllProductsScreen() {
 }
 
 const styles = StyleSheet.create({
-    container: { 
-        flex: 1, 
-        paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0 
-    },
+    container: { flex: 1, paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0 },
     header: { flexDirection: 'row', justifyContent: 'space-between', padding: 20, alignItems: 'center' },
     headerTitle: { fontSize: 20, fontWeight: 'bold' },
-    
     searchWrapper: { paddingHorizontal: 20, marginBottom: 15 },
     searchContainer: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 15, height: 50, borderRadius: 12 },
     searchInput: { flex: 1, marginLeft: 10, fontSize: 16 },
-
     categoryContainer: { marginBottom: 15 },
     categoryList: { paddingHorizontal: 20 },
     categoryChip: { paddingHorizontal: 20, paddingVertical: 8, borderRadius: 20, borderWidth: 1, marginRight: 10, height: 40, justifyContent: 'center' },
     categoryText: { fontSize: 14, fontWeight: '600' },
-
-    // Grid Styles
     gridWrapper: { justifyContent: 'space-between' },
     gridContent: { paddingHorizontal: 20, paddingBottom: 20 },
-    productCard: { width: '48%', borderRadius: 16, marginBottom: 15, overflow: 'hidden', elevation: 2, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 4, shadowOffset: { width: 0, height: 2 } },
+    
+    // Category Card Styles
+    categoryCard: { width: '48%', height: 120, borderRadius: 16, marginBottom: 15, overflow: 'hidden', elevation: 3 },
+    catCardImage: { width: '100%', height: '100%', resizeMode: 'cover' },
+    catCardOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'center', alignItems: 'center' },
+    catCardTitle: { color: '#FFF', fontSize: 18, fontWeight: 'bold' },
+
+    // Product Card
+    productCard: { width: '48%', borderRadius: 16, marginBottom: 15, overflow: 'hidden', elevation: 2 },
     productImage: { width: '100%', height: 140, resizeMode: 'cover' },
     productInfo: { padding: 10 },
     productTitle: { fontSize: 14, fontWeight: 'bold', marginBottom: 4 },
@@ -593,33 +657,17 @@ const styles = StyleSheet.create({
     downloadBtn: { paddingVertical: 6, borderRadius: 8, alignItems: 'center' },
     btnText: { color: '#FFF', fontSize: 12, fontWeight: 'bold' },
 
-    // List View Styles
+    // List Styles
     listContent: { paddingHorizontal: 20, paddingBottom: 40 },
     sectionHeaderBox: { paddingVertical: 10, marginTop: 10 },
     sectionHeaderTitle: { fontSize: 14, fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: 1 },
-    
-    calendarItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        padding: 15,
-        borderRadius: 12,
-        marginBottom: 10,
-        borderWidth: 1,
-    },
-    dateBox: {
-        width: 55,
-        alignItems: 'center',
-        marginRight: 15,
-        borderRightWidth: 1,
-        borderRightColor: '#EEE',
-        paddingRight: 15
-    },
+    calendarItem: { flexDirection: 'row', alignItems: 'center', padding: 15, borderRadius: 12, marginBottom: 10, borderWidth: 1 },
+    dateBox: { width: 55, alignItems: 'center', marginRight: 15, borderRightWidth: 1, borderRightColor: '#EEE', paddingRight: 15 },
     dateText: { fontSize: 18, fontWeight: 'bold' },
     monthText: { fontSize: 12, textTransform: 'uppercase', textAlign: 'center' },
     eventInfo: { flex: 1 },
     eventTitle: { fontSize: 16, fontWeight: '600' },
     exploreBtn: { paddingVertical: 8, paddingHorizontal: 16, borderRadius: 20 },
     exploreText: { fontSize: 12, fontWeight: 'bold' },
-
     emptyState: { alignItems: 'center', marginTop: 50 },
 });
