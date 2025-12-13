@@ -44,86 +44,215 @@ const ALL_PRODUCTS = [
 // --- DATA: CALENDAR 2026 (Posters & Videos) ---
 const CALENDAR_DATA_2026 = [
     {
-        title: 'January 2026',
+        title: 'JANUARY',
         data: [
-            { date: 'Jan 1', name: "New Year's Day" },
+            { date: 'Jan 1', name: "New Year’s Day" },
+            { date: 'Jan 4', name: "World Braille Day" },
+            { date: 'Jan 6', name: "World Day of War Orphans" },
+            { date: 'Jan 9', name: "Pravasi Bharatiya Divas" },
+            { date: 'Jan 10', name: "World Hindi Day" },
+            { date: 'Jan 11', name: "National Human Trafficking Awareness Day" },
+            { date: 'Jan 12', name: "National Youth Day (India)" },
             { date: 'Jan 13', name: "Lohri" },
-            { date: 'Jan 14', name: "Makar Sankranti/Pongal" },
-            { date: 'Jan 23', name: "Vasant Panchami / Parakram Diwas" },
+            { date: 'Jan 14', name: "Makar Sankranti / Pongal" },
+            { date: 'Jan 15', name: "Indian Army Day" },
+            { date: 'Jan 16', name: "National Startup Day (India)" },
+            { date: 'Jan 23', name: "Netaji Subhas Chandra Bose Jayanti" },
+            { date: 'Jan 24', name: "National Girl Child Day" },
+            { date: 'Jan 25', name: "National Voters’ Day" },
             { date: 'Jan 26', name: "Republic Day (India)" },
+            { date: 'Jan 27', name: "International Holocaust Remembrance Day" },
+            { date: 'Jan 28', name: "Data Privacy Day" },
+            { date: 'Jan 30', name: "Martyrs’ Day (India)" },
         ]
     },
     {
-        title: 'March 2026',
+        title: 'FEBRUARY',
         data: [
-            { date: 'Mar 3', name: "Holika Dahan (Optional)" },
-            { date: 'Mar 4', name: "Holi" },
-            { date: 'Mar 19', name: "Gudi Padwa/Ugadi" },
-            { date: 'Mar 27', name: "Ram Navami" },
-            { date: 'Mar 29', name: "Eid-ul-Fitr (Tentative)" },
+            { date: 'Feb 2', name: "World Wetlands Day" },
+            { date: 'Feb 4', name: "World Cancer Day" },
+            { date: 'Feb 6', name: "Intl. Day of Zero Tolerance for FGM" },
+            { date: 'Feb 10', name: "National Deworming Day (India)" },
+            { date: 'Feb 11', name: "Intl. Day of Women & Girls in Science" },
+            { date: 'Feb 13', name: "World Radio Day" },
+            { date: 'Feb 14', name: "Valentine’s Day" },
+            { date: 'Feb 15', name: "International Childhood Cancer Day" },
+            { date: 'Feb 20', name: "World Day of Social Justice" },
+            { date: 'Feb 21', name: "International Mother Language Day" },
+            { date: 'Feb 22', name: "World Thinking Day" },
+            { date: 'Feb 24', name: "Central Excise Day (India)" },
+            { date: 'Feb 27', name: "World NGO Day" },
+            { date: 'Feb 28', name: "National Science Day (India)" },
         ]
     },
     {
-        title: 'April 2026',
+        title: 'MARCH',
         data: [
-            { date: 'Apr 3', name: "Good Friday" },
-            { date: 'Apr 5', name: "Easter Sunday (Optional)" },
-            { date: 'Apr 14', name: "Vaisakhi" },
+            { date: 'Mar 1', name: "Zero Discrimination Day" },
+            { date: 'Mar 3', name: "World Wildlife Day" },
+            { date: 'Mar 4', name: "World Obesity Day" },
+            { date: 'Mar 8', name: "International Women’s Day" },
+            { date: 'Mar 10', name: "CISF Raising Day" },
+            { date: 'Mar 14', name: "Pi Day" },
+            { date: 'Mar 15', name: "World Consumer Rights Day" },
+            { date: 'Mar 16', name: "National Vaccination Day (India)" },
+            { date: 'Mar 20', name: "International Day of Happiness" },
+            { date: 'Mar 21', name: "World Forestry Day / World Down Syndrome Day" },
+            { date: 'Mar 22', name: "World Water Day" },
+            { date: 'Mar 23', name: "Shaheed Diwas" },
+            { date: 'Mar 24', name: "World Tuberculosis (TB) Day" },
+            { date: 'Mar 27', name: "World Theatre Day" },
         ]
     },
     {
-        title: 'May 2026',
+        title: 'APRIL',
         data: [
-            { date: 'May 1', name: "Buddha Purnima/May Day" },
-            { date: 'May 10', name: "Mother's Day" },
+            { date: 'Apr 1', name: "April Fool’s Day" },
+            { date: 'Apr 2', name: "World Autism Awareness Day" },
+            { date: 'Apr 5', name: "National Maritime Day (India)" },
+            { date: 'Apr 7', name: "World Health Day" },
+            { date: 'Apr 10', name: "World Homeopathy Day" },
+            { date: 'Apr 11', name: "National Safe Motherhood Day" },
+            { date: 'Apr 13', name: "Jallianwala Bagh Massacre Remembrance" },
+            { date: 'Apr 14', name: "Dr. B. R. Ambedkar Jayanti" },
+            { date: 'Apr 17', name: "World Hemophilia Day" },
+            { date: 'Apr 18', name: "World Heritage Day" },
+            { date: 'Apr 22', name: "Earth Day" },
+            { date: 'Apr 23', name: "World Book Day" },
+            { date: 'Apr 25', name: "World Malaria Day" },
+            { date: 'Apr 29', name: "International Dance Day" },
         ]
     },
     {
-        title: 'August 2026',
+        title: 'MAY',
         data: [
+            { date: 'May 1', name: "International Labour Day" },
+            { date: 'May 3', name: "World Press Freedom Day" },
+            { date: 'May 7', name: "World Athletics Day" },
+            { date: 'May 8', name: "World Red Cross Day" },
+            { date: 'May 11', name: "National Technology Day (India)" },
+            { date: 'May 12', name: "International Nurses Day" },
+            { date: 'May 15', name: "International Day of Families" },
+            { date: 'May 16', name: "International Day of Light" },
+            { date: 'May 17', name: "World Telecommunication Day" },
+            { date: 'May 20', name: "World Bee Day" },
+            { date: 'May 21', name: "Anti-Terrorism Day (India)" },
+            { date: 'May 22', name: "International Biodiversity Day" },
+            { date: 'May 31', name: "World No Tobacco Day" },
+        ]
+    },
+    {
+        title: 'JUNE',
+        data: [
+            { date: 'Jun 1', name: "Global Parents Day" },
+            { date: 'Jun 3', name: "World Bicycle Day" },
+            { date: 'Jun 5', name: "World Environment Day" },
+            { date: 'Jun 7', name: "World Food Safety Day" },
+            { date: 'Jun 8', name: "World Oceans Day" },
+            { date: 'Jun 12', name: "World Day Against Child Labour" },
+            { date: 'Jun 14', name: "World Blood Donor Day" },
+            { date: 'Jun 15', name: "World Elder Abuse Awareness Day" },
+            { date: 'Jun 20', name: "World Refugee Day" },
+            { date: 'Jun 21', name: "International Yoga Day" },
+            { date: 'Jun 23', name: "International Olympic Day" },
+            { date: 'Jun 26', name: "International Day Against Drug Abuse" },
+        ]
+    },
+    {
+        title: 'JULY',
+        data: [
+            { date: 'Jul 1', name: "National Doctors’ Day (India)" },
+            { date: 'Jul 6', name: "World Zoonoses Day" },
+            { date: 'Jul 11', name: "World Population Day" },
+            { date: 'Jul 15', name: "World Youth Skills Day" },
+            { date: 'Jul 18', name: "Nelson Mandela International Day" },
+            { date: 'Jul 28', name: "World Hepatitis Day" },
+            { date: 'Jul 29', name: "International Tiger Day" },
+        ]
+    },
+    {
+        title: 'AUGUST',
+        data: [
+            { date: 'Aug 7', name: "National Handloom Day" },
+            { date: 'Aug 9', name: "Quit India Movement Day" },
+            { date: 'Aug 10', name: "World Lion Day" },
+            { date: 'Aug 12', name: "International Youth Day" },
             { date: 'Aug 15', name: "Independence Day (India)" },
-            { date: 'Aug 26', name: "Onam/Thiruvonam" },
-            { date: 'Aug 28', name: "Raksha Bandhan" },
+            { date: 'Aug 19', name: "World Photography Day" },
+            { date: 'Aug 20', name: "World Mosquito Day" },
+            { date: 'Aug 23', name: "Intl. Day for Slave Trade Abolition" },
+            { date: 'Aug 29', name: "National Sports Day (India)" },
         ]
     },
     {
-        title: 'September 2026',
+        title: 'SEPTEMBER',
         data: [
-            { date: 'Sep 4', name: "Krishna Janmashtami" },
-            { date: 'Sep 5', name: "Teacher's Day" },
-            { date: 'Sep 14', name: "Ganesh Chaturthi" },
+            { date: 'Sep 5', name: "Teachers’ Day (India)" },
+            { date: 'Sep 7', name: "International Day of Clean Air" },
+            { date: 'Sep 8', name: "International Literacy Day" },
+            { date: 'Sep 10', name: "World Suicide Prevention Day" },
+            { date: 'Sep 14', name: "Hindi Diwas" },
+            { date: 'Sep 15', name: "Engineers’ Day (India)" },
+            { date: 'Sep 16', name: "World Ozone Day" },
+            { date: 'Sep 21', name: "International Day of Peace" },
+            { date: 'Sep 25', name: "World Pharmacists Day" },
+            { date: 'Sep 27', name: "World Tourism Day" },
+            { date: 'Sep 28', name: "World Rabies Day" },
         ]
     },
     {
-        title: 'October 2026',
+        title: 'OCTOBER',
         data: [
+            { date: 'Oct 1', name: "International Day of Older Persons" },
             { date: 'Oct 2', name: "Gandhi Jayanti" },
-            { date: 'Oct 9-17', name: "Navratri" },
-            { date: 'Oct 20', name: "Dussehra (Vijayadashami)" },
-            { date: 'Oct 28', name: "Karva Chauth (Optional)" },
+            { date: 'Oct 4', name: "World Animal Welfare Day" },
+            { date: 'Oct 5', name: "World Teachers’ Day" },
+            { date: 'Oct 8', name: "Indian Air Force Day" },
+            { date: 'Oct 10', name: "World Mental Health Day" },
+            { date: 'Oct 11', name: "International Girl Child Day" },
+            { date: 'Oct 13', name: "World Disaster Reduction Day" },
+            { date: 'Oct 15', name: "World Students’ Day" },
+            { date: 'Oct 16', name: "World Food Day" },
+            { date: 'Oct 24', name: "United Nations Day" },
+            { date: 'Oct 31', name: "National Unity Day" },
         ]
     },
     {
-        title: 'November 2026',
+        title: 'NOVEMBER',
         data: [
-            { date: 'Nov 6', name: "Dhanteras (Optional)" },
-            { date: 'Nov 8', name: "Diwali (Deepavali)" },
-            { date: 'Nov 9', name: "Govardhan Puja" },
-            { date: 'Nov 11', name: "Bhai Dooj" },
-            { date: 'Nov 14', name: "Children's Day" },
-            { date: 'Nov 15', name: "Chhath Puja" },
-            { date: 'Nov 24', name: "Guru Nanak Jayanti" },
+            { date: 'Nov 1', name: "World Vegan Day" },
+            { date: 'Nov 5', name: "World Tsunami Awareness Day" },
+            { date: 'Nov 8', name: "World Radiography Day" },
+            { date: 'Nov 10', name: "World Science Day" },
+            { date: 'Nov 14', name: "Children’s Day (India)" },
+            { date: 'Nov 16', name: "International Tolerance Day" },
+            { date: 'Nov 17', name: "World Students’ Day" },
+            { date: 'Nov 19', name: "International Men’s Day" },
+            { date: 'Nov 20', name: "Universal Children’s Day" },
+            { date: 'Nov 26', name: "Constitution Day (India)" },
         ]
     },
     {
-        title: 'December 2026',
+        title: 'DECEMBER',
         data: [
+            { date: 'Dec 1', name: "World AIDS Day" },
+            { date: 'Dec 2', name: "National Pollution Control Day" },
+            { date: 'Dec 3', name: "Intl. Day of Persons with Disabilities" },
+            { date: 'Dec 4', name: "Indian Navy Day" },
+            { date: 'Dec 5', name: "World Soil Day" },
+            { date: 'Dec 7', name: "Armed Forces Flag Day" },
+            { date: 'Dec 10', name: "Human Rights Day" },
+            { date: 'Dec 11', name: "International Mountain Day" },
+            { date: 'Dec 14', name: "National Energy Conservation Day" },
+            { date: 'Dec 18', name: "International Migrants Day" },
+            { date: 'Dec 24', name: "National Consumer Day" },
             { date: 'Dec 25', name: "Christmas" },
+            { date: 'Dec 31', name: "New Year’s Eve" },
         ]
     },
 ];
 
-// --- NEW DATA: GREETINGS LIST ---
+// --- DATA: GREETINGS LIST ---
 const GREETINGS_DATA = [
     {
         title: 'Personal Milestones',
@@ -174,6 +303,93 @@ const GREETINGS_DATA = [
     },
 ];
 
+// --- DATA: LIC PLANS LIST ---
+const LIC_DATA = [
+    {
+        title: '1. New Plans Recently Launched (2025)',
+        data: [
+            { date: 'Plan 880', name: "LIC’s Jan Suraksha" },
+            { date: 'Plan 881', name: "LIC’s Bima Lakshmi" },
+            { date: 'Plan 886', name: "LIC’s Protection Plus" },
+            { date: 'Plan 887', name: "LIC’s Bima Kavach" },
+        ]
+    },
+    {
+        title: '2. Endowment & Savings Plans',
+        data: [
+            { date: 'Plan 717', name: "Single Premium Endowment" },
+            { date: 'Plan 714', name: "New Endowment Plan" },
+            { date: 'Plan 715', name: "New Jeevan Anand" },
+            { date: 'Plan 733', name: "Jeevan Lakshya" },
+            { date: 'Plan 736', name: "Jeevan Labh Plan" },
+            { date: 'Plan 774', name: "Amritbaal" },
+            { date: 'Plan 760', name: "Bima Jyoti" },
+            { date: 'Plan 768', name: "Jeevan Azad" },
+            { date: 'Plan 912', name: "Nav Jeevan Shree" },
+            { date: 'Plan 911', name: "Nav Jeevan Shree - Single" },
+            { date: 'Plan 881', name: "Bima Lakshmi" },
+        ]
+    },
+    {
+        title: '3. Whole Life Plans',
+        data: [
+            { date: 'Plan 745', name: "Jeevan Umang" },
+            { date: 'Plan 771', name: "Jeevan Utsav" },
+        ]
+    },
+    {
+        title: '4. Term Assurance (Pure Life Cover)',
+        data: [
+            { date: 'Plan 876', name: "Digi Term" },
+            { date: 'Plan 878', name: "Digi Credit Life" },
+            { date: 'Plan 877', name: "Yuva Credit Life" },
+            { date: 'Plan 875', name: "Yuva Term" },
+            { date: 'Plan 954', name: "New Tech-Term" },
+            { date: 'Plan 955', name: "New Jeevan Amar" },
+            { date: 'Plan 859', name: "Saral Jeevan Bima" },
+        ]
+    },
+];
+
+// --- NEW DATA: BUSINESS LIST ---
+const BUSINESS_DATA = [
+    {
+        title: 'Growth & Strategy',
+        data: [
+            { date: 'Biz Quote', name: "Motivational Quote for Entrepreneurs" },
+            { date: 'Pro Tip', name: "Tip of the Day" },
+            { date: 'Daily Insp', name: "Daily Business Inspiration" },
+            { date: 'How To', name: "How-To Tips & Hacks" },
+        ]
+    },
+    {
+        title: 'Marketing & Promotion',
+        data: [
+            { date: 'New Launch', name: "New Service Launch" },
+            { date: 'Hot Sale', name: "Seasonal Offer / Sale" },
+            { date: 'Show Case', name: "Product Showcase" },
+            { date: 'Top Pick', name: "Service Highlight" },
+        ]
+    },
+    {
+        title: 'Brand & Community',
+        data: [
+            { date: 'User Review', name: "Client Testimonial" },
+            { date: 'Our Team', name: "Team Spotlight" },
+            { date: 'BTS View', name: "Behind-the-Scenes" },
+            { date: 'Big Win', name: "Business Milestone" },
+        ]
+    },
+    {
+        title: 'Industry Insights',
+        data: [
+            { date: 'Key Stat', name: "Industry Fact / Statistic" },
+            { date: 'New Trend', name: "Market Trend Alert" },
+            { date: 'Save Date', name: "Upcoming Event Reminder" },
+        ]
+    }
+];
+
 export default function AllProductsScreen() {
     const router = useRouter();
     const { theme } = useContext(UserContext); 
@@ -207,11 +423,14 @@ export default function AllProductsScreen() {
     // --- Determine which List Data to show ---
     const getListData = () => {
         if (selectedCategory === 'Greetings') return GREETINGS_DATA;
+        if (selectedCategory === 'LIC Plans') return LIC_DATA;
+        if (selectedCategory === 'Business') return BUSINESS_DATA; // ✅ Added Business Data
         if (selectedCategory === 'Posters' || selectedCategory === 'Videos') return CALENDAR_DATA_2026;
         return [];
     };
 
-    const isListView = ['Posters', 'Videos', 'Greetings'].includes(selectedCategory);
+    // ✅ Added 'Business' to list view check
+    const isListView = ['Posters', 'Videos', 'Greetings', 'LIC Plans', 'Business'].includes(selectedCategory);
 
     // --- Render Category Chip ---
     const renderCategory = ({ item }) => {
@@ -251,7 +470,7 @@ export default function AllProductsScreen() {
         </TouchableOpacity>
     );
 
-    // --- Render List Item (Shared for Calendar & Greetings) ---
+    // --- Render List Item (Shared for Calendar, Greetings, LIC, Business) ---
     const renderListItem = ({ item }) => (
         <View style={[styles.calendarItem, { backgroundColor: theme.surface, borderColor: theme.border }]}>
             <View style={styles.dateBox}>
@@ -312,7 +531,7 @@ export default function AllProductsScreen() {
 
             {/* CONDITIONAL CONTENT */}
             {isListView ? (
-                // 1. Show List View (Calendar / Greetings)
+                // 1. Show List View
                 <SectionList
                     sections={getListData()}
                     keyExtractor={(item, index) => item.name + index}
