@@ -1,4 +1,3 @@
-// allproducts.js (top part is already correct)
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useContext, useState } from 'react';
@@ -15,8 +14,6 @@ import {
     View
 } from 'react-native';
 import { UserContext } from '../../src/context/UserContext';
-import { ALL_PRODUCTS } from '../../src/data/products'; // after you move data
-
 
 // --- DATA: CATEGORIES ---
 const CATEGORIES = [
@@ -326,36 +323,36 @@ const BUSINESS_DATA = [
     {
         title: 'Growth & Strategy',
         data: [
-            { date: '1', name: "Motivational Quote for Entrepreneurs" },
-            { date: '2', name: "Tip of the Day" },
-            { date: '3', name: "Daily Business Inspiration" },
-            { date: '4', name: "How-To Tips & Hacks" },
+            { date: 'Biz Quote', name: "Motivational Quote for Entrepreneurs" },
+            { date: 'Pro Tip', name: "Tip of the Day" },
+            { date: 'Daily Insp', name: "Daily Business Inspiration" },
+            { date: 'How To', name: "How-To Tips & Hacks" },
         ]
     },
     {
         title: 'Marketing & Promotion',
         data: [
-            { date: '5', name: "New Service Launch" },
-            { date: '6', name: "Seasonal Offer / Sale" },
-            { date: '7', name: "Product Showcase" },
-            { date: '8', name: "Service Highlight" },
+            { date: 'New Launch', name: "New Service Launch" },
+            { date: 'Hot Sale', name: "Seasonal Offer / Sale" },
+            { date: 'Show Case', name: "Product Showcase" },
+            { date: 'Top Pick', name: "Service Highlight" },
         ]
     },
     {
         title: 'Brand & Community',
         data: [
-            { date: '9', name: "Client Testimonial" },
-            { date: '10', name: "Team Spotlight" },
-            { date: '11', name: "Behind-the-Scenes" },
-            { date: '12', name: "Business Milestone" },
+            { date: 'User Review', name: "Client Testimonial" },
+            { date: 'Our Team', name: "Team Spotlight" },
+            { date: 'BTS View', name: "Behind-the-Scenes" },
+            { date: 'Big Win', name: "Business Milestone" },
         ]
     },
     {
         title: 'Industry Insights',
         data: [
-            { date: '13', name: "Industry Fact / Statistic" },
-            { date: '14', name: "Market Trend Alert" },
-            { date: '15', name: "Upcoming Event Reminder" },
+            { date: 'Key Stat', name: "Industry Fact / Statistic" },
+            { date: 'New Trend', name: "Market Trend Alert" },
+            { date: 'Save Date', name: "Upcoming Event Reminder" },
         ]
     }
 ];
@@ -365,31 +362,31 @@ const CERTIFICATES_DATA = [
     {
         title: 'Employee Recognition',
         data: [
-            { date: '1', name: "Employee of the Month Certificate" },
-            { date: '2', name: "Best Team Member Certificate" },
-            { date: '3', name: "Top Performer Certificate" },
-            { date: '4', name: "Leadership Award Certificate" },
+            { date: 'Monthly', name: "Employee of the Month Certificate" },
+            { date: 'Team', name: "Best Team Member Certificate" },
+            { date: 'Top Perf', name: "Top Performer Certificate" },
+            { date: 'Leader', name: "Leadership Award Certificate" },
         ]
     },
     {
         title: 'Training & Education',
         data: [
-            { date: '5', name: "Participation Certificate" },
-            { date: '6', name: "Achievement Certificate" },
-            { date: '7', name: "Certification of Completion" },
-            { date: '8', name: "Training Completion Certificate" },
-            { date: '9', name: "Online Course Certificate" },
+            { date: 'Participate', name: "Participation Certificate" },
+            { date: 'Achieve', name: "Achievement Certificate" },
+            { date: 'Complete', name: "Certification of Completion" },
+            { date: 'Training', name: "Training Completion Certificate" },
+            { date: 'Course', name: "Online Course Certificate" },
         ]
     },
     {
         title: 'Awards & Appreciation',
         data: [
-            { date: '10', name: "Excellence Award Certificate" },
-            { date: '11', name: "Customer Appreciation Certificate" },
-            { date: '12', name: "Innovation / Creativity Certificate" },
-            { date: '13', name: "Volunteer Appreciation Certificate" },
-            { date: '14', name: "Special Recognition Certificate" },
-            { date: '15', name: "Motivational / Inspirational Certificate" },
+            { date: 'Excellence', name: "Excellence Award Certificate" },
+            { date: 'Customer', name: "Customer Appreciation Certificate" },
+            { date: 'Innovation', name: "Innovation / Creativity Certificate" },
+            { date: 'Volunteer', name: "Volunteer Appreciation Certificate" },
+            { date: 'Special', name: "Special Recognition Certificate" },
+            { date: 'Inspire', name: "Motivational / Inspirational Certificate" },
         ]
     }
 ];
@@ -399,39 +396,69 @@ const MOTIVATION_DATA = [
     {
         title: 'Daily Inspiration',
         data: [
-            { date: '1', name: "Daily Quote" },
-            { date: '2', name: "Morning Inspiration" },
-            { date: '3', name: "Daily Affirmation" },
-            { date: '4', name: "Positive Thinking Reminder" },
+            { date: 'Daily', name: "Daily Quote" },
+            { date: 'Morning', name: "Morning Inspiration" },
+            { date: 'Affirm', name: "Daily Affirmation" },
+            { date: 'Positive', name: "Positive Thinking Reminder" },
         ]
     },
     {
         title: 'Mindset & Growth',
         data: [
-            { date: '5', name: "Success Mantra" },
-            { date: '6', name: "Overcoming Failure" },
-            { date: '7', name: "Mindset Shift Poster" },
-            { date: '8', name: "Success Story Highlight" },
+            { date: 'Mantra', name: "Success Mantra" },
+            { date: 'Resilience', name: "Overcoming Failure" },
+            { date: 'Mindset', name: "Mindset Shift Poster" },
+            { date: 'Story', name: "Success Story Highlight" },
         ]
     },
     {
         title: 'Discipline & Goals',
         data: [
-            { date: '9', name: "Goal Setting Tip" },
-            { date: '10', name: "Work Hard / Dream Big" },
-            { date: '11', name: "Self-Discipline Tip" },
-            { date: '12', name: "Time Management Tip" },
-            { date: '13', name: "Overcome Procrastination" },
+            { date: 'Goals', name: "Goal Setting Tip" },
+            { date: 'Hustle', name: "Work Hard / Dream Big" },
+            { date: 'Discipline', name: "Self-Discipline Tip" },
+            { date: 'Time', name: "Time Management Tip" },
+            { date: 'Action', name: "Overcome Procrastination" },
         ]
     },
     {
         title: 'Success & Wellness',
         data: [
-            { date: '14', name: "Entrepreneur Motivation" },
-            { date: '15', name: "Health + Motivation" },
+            { date: 'Startup', name: "Entrepreneur Motivation" },
+            { date: 'Health', name: "Health + Motivation" },
         ]
     }
 ];
+
+// --- DATA: BROCHURES LIST ---
+const BROCHURES_DATA = [
+    {
+        title: 'Corporate & Business',
+        data: [
+            { date: 'B1', name: "Company Profile Brochure" },
+            { date: 'B2', name: "Annual Report Layout" },
+            { date: 'B3', name: "Business Proposal" },
+        ]
+    },
+    {
+        title: 'Marketing & Sales',
+        data: [
+            { date: 'B4', name: "Product Catalog" },
+            { date: 'B5', name: "Real Estate Brochure" },
+            { date: 'B6', name: "Restaurant Menu" },
+            { date: 'B7', name: "Travel & Tour Packages" },
+        ]
+    },
+    {
+        title: 'Events & Education',
+        data: [
+            { date: 'B8', name: "Conference Agenda" },
+            { date: 'B9', name: "School Prospectus" },
+            { date: 'B10', name: "Training Manual" },
+        ]
+    }
+];
+
 export default function AllProductsScreen() {
     const router = useRouter();
     const { theme } = useContext(UserContext); 
@@ -446,7 +473,69 @@ export default function AllProductsScreen() {
         return matchesCategory && matchesSearch;
     });
 
+    // --- Navigation Handler ---
     const handleUseProduct = (item) => {
+        // 1. POSTERS -> New Event Details Screen
+        if (selectedCategory === 'Posters') {
+            router.push({
+                pathname: '/(main)/posters/event-details',
+                params: { 
+                    date: item.date, 
+                    eventName: item.name 
+                }
+            });
+            return;
+        }
+
+        // 2. VIDEOS -> New Video Details Screen
+        if (selectedCategory === 'Videos') {
+            router.push({
+                pathname: '/(main)/videos/event-details',
+                params: { 
+                    date: item.date, 
+                    eventName: item.name 
+                }
+            });
+            return;
+        }
+
+        // 3. GREETINGS -> New Greetings Details Screen
+        if (selectedCategory === 'Greetings') {
+            router.push({
+                pathname: '/(main)/greetings/event-details',
+                params: { 
+                    date: item.date, 
+                    eventName: item.name 
+                }
+            });
+            return;
+        }
+
+        // 4. LIC PLANS -> New Plan Details Screen
+        if (selectedCategory === 'LIC Plans') {
+            router.push({
+                pathname: '/(main)/lic-plans/plan-details',
+                params: { 
+                    planNumber: item.date, 
+                    planName: item.name 
+                }
+            });
+            return;
+        }
+
+        // 5. BUSINESS -> New Business Details Screen
+        if (selectedCategory === 'Business') {
+            router.push({
+                pathname: '/(main)/business/business-details',
+                params: { 
+                    topic: item.name, 
+                    shortCode: item.date 
+                }
+            });
+            return;
+        }
+
+        // 6. OTHERS -> Standard Product Details (Brochures, Certificates, Motivation, etc. if no specific screen)
         router.push({
             pathname: '/(main)/product-details',
             params: { 
@@ -465,11 +554,13 @@ export default function AllProductsScreen() {
         if (selectedCategory === 'Business') return BUSINESS_DATA;
         if (selectedCategory === 'Certificates') return CERTIFICATES_DATA;
         if (selectedCategory === 'Motivation') return MOTIVATION_DATA;
+        if (selectedCategory === 'Brochures') return BROCHURES_DATA;
         if (selectedCategory === 'Posters' || selectedCategory === 'Videos') return CALENDAR_DATA_2026;
         return [];
     };
 
-    const isListView = ['Posters', 'Videos', 'Greetings', 'LIC Plans', 'Business', 'Certificates', 'Motivation'].includes(selectedCategory);
+    // ✅ Added 'Brochures' to list view check
+    const isListView = ['Posters', 'Videos', 'Greetings', 'LIC Plans', 'Business', 'Certificates', 'Motivation', 'Brochures'].includes(selectedCategory);
 
     // --- COMPONENTS ---
 
@@ -493,9 +584,8 @@ export default function AllProductsScreen() {
         );
     };
 
-    // --- 1. NEW: Category Card for "All" Tab Grid ---
+    // --- 1. Category Card for "All" Tab Grid ---
     const renderCategoryCard = ({ item }) => {
-        // Use the image from CATEGORIES array, not from ALL_PRODUCTS search
         const repImage = item.image || 'https://images.unsplash.com/photo-1557683316-973673baf926?w=400&q=80';
 
         return (
@@ -527,7 +617,10 @@ export default function AllProductsScreen() {
 
     // --- Render List Item (Shared) ---
     const renderListItem = ({ item }) => (
-        <View style={[styles.calendarItem, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+        <TouchableOpacity 
+            style={[styles.calendarItem, { backgroundColor: theme.surface, borderColor: theme.border }]}
+            onPress={() => handleUseProduct(item)} // Make whole row clickable
+        >
             <View style={styles.dateBox}>
                 <Text style={[styles.dateText, { color: theme.primary }]}>
                     {item.date.includes(' ') ? item.date.split(' ')[1] : item.date.substring(0, 3)}
@@ -539,10 +632,7 @@ export default function AllProductsScreen() {
             <View style={styles.eventInfo}>
                 <Text style={[styles.eventTitle, { color: theme.text }]}>{item.name}</Text>
             </View>
-            <TouchableOpacity style={[styles.exploreBtn, { backgroundColor: theme.primary }]} onPress={() => handleUseProduct(item)}>
-                <Text style={[styles.exploreText, { color: '#FFF' }]}>Explore</Text>
-            </TouchableOpacity>
-        </View>
+        </TouchableOpacity>
     );
 
     return (
@@ -596,8 +686,8 @@ export default function AllProductsScreen() {
                     contentContainerStyle={styles.gridContent}
                     showsVerticalScrollIndicator={false}
                 />
-            ) : isListView ? (
-                // 2. Show List View for specific categories (Calendar/Lists)
+            ) : (
+                // 2. Show List View for ALL other categories (Calendar/Lists)
                 <SectionList
                     sections={getListData()}
                     keyExtractor={(item, index) => item.name + index}
@@ -609,22 +699,6 @@ export default function AllProductsScreen() {
                     )}
                     contentContainerStyle={styles.listContent}
                     showsVerticalScrollIndicator={false}
-                />
-            ) : (
-                // 3. Show Grid for other product types (e.g. Brochures if not in list)
-                <FlatList
-                    data={filteredProducts}
-                    renderItem={renderProduct}
-                    keyExtractor={item => item.id}
-                    numColumns={2}
-                    columnWrapperStyle={styles.gridWrapper}
-                    contentContainerStyle={styles.gridContent}
-                    showsVerticalScrollIndicator={false}
-                    ListEmptyComponent={
-                        <View style={styles.emptyState}>
-                            <Text style={{ color: theme.textLight }}>No products found</Text>
-                        </View>
-                    }
                 />
             )}
         </View>
