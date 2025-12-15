@@ -535,7 +535,40 @@ export default function AllProductsScreen() {
             return;
         }
 
-        // 6. OTHERS -> Standard Product Details (Brochures, Certificates, Motivation, etc. if no specific screen)
+        // 6. MOTIVATION
+        if (selectedCategory === 'Motivation') {
+            router.push({
+                pathname: '/(main)/motivation/motivation-details',
+                params: { 
+                    title: item.name, 
+                    tag: item.date 
+                }
+            });
+            return;
+        }
+
+        // 7. CERTIFICATES
+        if (selectedCategory === 'Certificates') {
+            router.push({
+                pathname: '/(main)/certificates/certificate-details',
+                params: { 
+                    title: item.name, 
+                    code: item.date 
+                }
+            });
+            return;
+        }
+
+        // 8. BROCHURES
+        if (selectedCategory === 'Brochures') {
+            router.push({
+                pathname: '/(main)/brochures/brochure-details',
+                params: { type: item.name, code: item.date }
+            });
+            return;
+        }
+
+        // Default Fallback
         router.push({
             pathname: '/(main)/product-details',
             params: { 
@@ -559,8 +592,8 @@ export default function AllProductsScreen() {
         return [];
     };
 
-    // ✅ Added 'Brochures' to list view check
-    const isListView = ['Posters', 'Videos', 'Greetings', 'LIC Plans', 'Business', 'Certificates', 'Motivation', 'Brochures'].includes(selectedCategory);
+    // 'All' is handled by FlatList grid; everything else by SectionList
+    const isListView = selectedCategory !== 'All';
 
     // --- COMPONENTS ---
 
