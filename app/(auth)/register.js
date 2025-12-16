@@ -2,18 +2,21 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import {
-  ActivityIndicator,
-  Alert,
-  Modal,
-  SafeAreaView,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View
+    ActivityIndicator,
+    Alert,
+    Modal,
+    SafeAreaView,
+    ScrollView,
+    StatusBar,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View
 } from 'react-native';
+// ✅ Import AsyncStorage
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 // Import API
 import { registerUser } from '../../src/services/auth.api';
 
@@ -29,7 +32,7 @@ const Theme = {
     border: '#E5E7EB',
 };
 
-// ✅ FIX: Define this component OUTSIDE of RegisterScreen
+// Component defined outside
 const InputField = ({ label, placeholder, value, onChangeText, keyboardType, maxLength }) => (
     <View style={styles.inputGroup}>
         <Text style={styles.label}>{label}</Text>
@@ -83,6 +86,20 @@ export default function RegisterScreen() {
             setIsLoading(false);
 
             if (response.status === 'success') {
+                
+                // ✅ SAVE DATA TO STORAGE
+                // This saves the details so Home & Profile can read them later
+                try {
+                    const userData = {
+                        name: name,
+                        businessName: businessName,
+                        phone: phone,
+                    };
+                    await AsyncStorage.setItem('userSession', JSON.stringify(userData));
+                } catch (error) {
+                    console.log('Error saving user data:', error);
+                }
+
                 setShowWelcome(true);
                 setTimeout(() => {
                     setShowWelcome(false);
@@ -120,7 +137,7 @@ export default function RegisterScreen() {
                 <ScrollView 
                     contentContainerStyle={styles.sheetContent} 
                     showsVerticalScrollIndicator={false}
-                    keyboardShouldPersistTaps="handled" // Helps with keeping focus
+                    keyboardShouldPersistTaps="handled"
                 >
                     
                     <InputField 

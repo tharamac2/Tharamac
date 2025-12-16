@@ -1,7 +1,7 @@
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
-import { useRouter } from 'expo-router';
-import { useContext } from 'react';
+import { useFocusEffect, useRouter } from 'expo-router'; // ✅ Added useFocusEffect
+import { useCallback, useContext } from 'react'; // ✅ Added useCallback
 import {
     Alert,
     Image,
@@ -13,6 +13,9 @@ import {
     TouchableOpacity,
     View
 } from 'react-native';
+// ✅ Import AsyncStorage
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 // Import the Context
 import { UserContext } from '../../src/context/UserContext';
 
@@ -29,7 +32,33 @@ export default function ProfileScreen() {
     // Get live data from Context
     const { userData, setUserData, theme } = useContext(UserContext);
 
-    const handleLogout = () => {
+    // ✅ UPDATED: Fetch data from AsyncStorage when screen comes into focus
+    useFocusEffect(
+        useCallback(() => {
+            const loadProfileData = async () => {
+                try {
+                    const jsonValue = await AsyncStorage.getItem('userSession');
+                    if (jsonValue != null) {
+                        const savedUser = JSON.parse(jsonValue);
+                        // Update the Context with the saved data
+                        setUserData(prev => ({
+                            ...prev,
+                            name: savedUser.name || prev.name,
+                            businessName: savedUser.businessName || prev.businessName,
+                            phone: savedUser.phone || prev.phone
+                        }));
+                    }
+                } catch (e) {
+                    console.error("Failed to load profile", e);
+                }
+            };
+            loadProfileData();
+        }, [])
+    );
+
+    const handleLogout = async () => {
+        // Optional: Clear session on logout
+        // await AsyncStorage.removeItem('userSession'); 
         router.replace('/(auth)/login');
     };
 
@@ -75,7 +104,7 @@ export default function ProfileScreen() {
                     </TouchableOpacity>
                     <Text style={styles.headerTitle}>Profile</Text>
                     
-                    {/* ✅ UPDATED: Settings Button Navigation */}
+                    {/* Settings Button Navigation */}
                     <TouchableOpacity 
                         style={styles.iconBtn} 
                         onPress={() => router.push('/(main)/settings')}
@@ -103,8 +132,9 @@ export default function ProfileScreen() {
                         <Text style={styles.premiumText}>Premium Member</Text>
                     </View>
 
-                    <Text style={[styles.userName, dynamicStyles.text]}>{userData.name}</Text>
-                    <Text style={[styles.userBio, dynamicStyles.textLight]}>{userData.businessName}</Text>
+                    {/* ✅ UPDATED: Display Name and Business from Context (which is updated by AsyncStorage) */}
+                    <Text style={[styles.userName, dynamicStyles.text]}>{userData.name || 'User'}</Text>
+                    <Text style={[styles.userBio, dynamicStyles.textLight]}>{userData.businessName || 'Business Name'}</Text>
 
                     {/* Stats Row */}
                     <View style={styles.statsRow}>

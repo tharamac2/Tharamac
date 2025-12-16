@@ -1,11 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
     ActivityIndicator,
     Alert,
-    Image,
-    Keyboard,
     KeyboardAvoidingView,
     Platform,
     SafeAreaView,
@@ -14,181 +12,319 @@ import {
     Text,
     TextInput,
     TouchableOpacity,
-    TouchableWithoutFeedback,
     View
 } from 'react-native';
-// ✅ Import the login service
-import { loginUser } from '../../src/services/auth.api';
+// ✅ Import AsyncStorage
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Theme Colors
 const Theme = {
-    primary: '#7C3AED', 
-    background: '#FFFFFF',
+    primary: '#7C3AED',       
+    primaryDark: '#6D28D9',
+    background: '#7C3AED',    
+    surface: '#FFFFFF',       
     text: '#1F2937',
     textLight: '#9CA3AF',
     inputBg: '#F3F4F6',
+    border: '#E5E7EB',
+};
+
+// ====================================================
+// ✅ SIMULATED DATABASE (MOCK DB)
+// Add your test users here. When you login with these 
+// numbers, the app will load these specific details.
+// ====================================================
+const REGISTERED_USERS = {
+    '1234567890': {
+        name: 'Rahul Sharma',
+        businessName: 'Sharma Electronics',
+        phone: '1234567890'
+    },
+    '9876543210': {
+        name: 'Priya Verma',
+        businessName: 'Priya Designs',
+        phone: '9876543210'
+    },
+    '5555555555': {
+        name: 'Demo Admin',
+        businessName: 'Master Admin Console',
+        phone: '5555555555'
+    }
 };
 
 export default function LoginScreen() {
     const router = useRouter();
+    
+    // State variables
     const [phone, setPhone] = useState('');
+    const [otp, setOtp] = useState(''); 
+    const [generatedOtp, setGeneratedOtp] = useState(null); // Stores the random OTP
+    const [showOtpInput, setShowOtpInput] = useState(false); 
     const [isLoading, setIsLoading] = useState(false);
+    
+    // Timer state 
+    const [timer, setTimer] = useState(30);
+    const [canResend, setCanResend] = useState(false);
 
-    const handleLogin = async () => {
-        // 1. Basic Validation
-        if (!phone || phone.length !== 10) {
-            Alert.alert('Invalid Input', 'Please enter a valid 10-digit mobile number');
+    // Timer logic
+    useEffect(() => {
+        let interval;
+        if (showOtpInput && timer > 0) {
+            interval = setInterval(() => setTimer((prev) => prev - 1), 1000);
+        } else if (timer === 0) {
+            setCanResend(true);
+        }
+        return () => clearInterval(interval);
+    }, [showOtpInput, timer]);
+
+    // --- STEP 1: SEND RANDOM OTP ---
+    const handleSendOtp = async () => {
+        if (!phone || phone.length < 10) {
+            Alert.alert('Error', 'Please enter a valid 10-digit mobile number');
             return;
         }
 
         setIsLoading(true);
 
-        try {
-            // 2. Call API to check if user exists in Database
-            const response = await loginUser(phone);
-            
+        // Simulate Network Delay
+        setTimeout(() => {
             setIsLoading(false);
 
-            if (response.status === 'success') {
-                // ✅ User Found: Proceed to OTP
-                // You can also save user data to context/storage here if needed
-                console.log("Login Success:", response.message);
-                router.push({ pathname: '/(auth)/otp', params: { phone: phone } });
-            } else {
-                // ❌ User Not Found: Show Error
-                Alert.alert(
-                    'Account Not Found', 
-                    response.message, 
-                    [
-                        { text: 'Cancel', style: 'cancel' },
-                        { text: 'Sign Up', onPress: () => router.push('/(auth)/register') }
-                    ]
-                );
-            }
+            // ✅ Generate Random 4-Digit OTP
+            const randomCode = Math.floor(1000 + Math.random() * 9000).toString();
+            setGeneratedOtp(randomCode);
 
-        } catch (error) {
-            setIsLoading(false);
-            Alert.alert('Error', 'Something went wrong. Please check your internet.');
+            // ✅ Show OTP in Alert (Simulating SMS)
+            Alert.alert('OTP Received', `Your verification code is: ${randomCode}`);
+
+            setShowOtpInput(true);
+            setTimer(30);
+            setCanResend(false);
+        }, 1500);
+    };
+
+    // --- STEP 2: VERIFY OTP & LOGIN ---
+    const handleVerifyLogin = async () => {
+        if (!otp || otp.length < 4) {
+            Alert.alert('Error', 'Please enter the valid OTP');
+            return;
         }
+
+        setIsLoading(true);
+
+        // Simulate Verification Delay
+        setTimeout(async () => {
+            setIsLoading(false);
+
+            // ✅ CHECK: Does entered OTP match the generated one?
+            if (otp === generatedOtp) {
+                
+                // ====================================================
+                // ✅ FETCH USER DETAILS FROM MOCK DB
+                // ====================================================
+                try {
+                    // Check if this phone number exists in our "Database"
+                    let userData = REGISTERED_USERS[phone];
+
+                    // If user is NOT in database, create a default "New User"
+                    if (!userData) {
+                        userData = {
+                            name: 'New User', 
+                            businessName: 'My New Business',
+                            phone: phone,
+                            isNew: true // Optional flag
+                        };
+                    }
+
+                    // Save the specific user data to storage
+                    // The Home & Profile screens will read this data!
+                    await AsyncStorage.setItem('userSession', JSON.stringify(userData));
+                    
+                    // Navigate to Home
+                    router.replace('/(main)/home');
+                    
+                } catch (e) {
+                    console.log('Failed to save user data', e);
+                }
+                // ====================================================
+
+            } else {
+                Alert.alert('Login Failed', 'Incorrect OTP. Please try again.');
+            }
+        }, 1000);
+    };
+
+    // Resend Handler
+    const handleResendOtp = () => {
+        setOtp('');
+        setTimer(30);
+        setCanResend(false);
+        handleSendOtp();
+    };
+
+    const handleBackToPhone = () => {
+        setShowOtpInput(false);
+        setOtp('');
+        setGeneratedOtp(null);
     };
 
     return (
-        <SafeAreaView style={styles.container}>
-            <StatusBar barStyle="dark-content" backgroundColor="#FFF" />
-            <KeyboardAvoidingView 
-                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                style={{ flex: 1 }}
-            >
-                <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-                    <View style={styles.content}>
-                        
-                        {/* Header Back Button */}
-                        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-                            <Ionicons name="arrow-back" size={24} color={Theme.text} />
-                        </TouchableOpacity>
+        <View style={styles.mainContainer}>
+            <StatusBar barStyle="light-content" backgroundColor={Theme.primary} />
+            
+            {/* Header / Logo Area */}
+            <SafeAreaView style={styles.headerArea}>
+                <View style={styles.logoContainer}>
+                    <View style={styles.logoCircle}>
+                        <Ionicons name="person" size={40} color={Theme.primary} />
+                    </View>
+                    <Text style={styles.headerTitle}>Welcome Back</Text>
+                    <Text style={styles.headerSubtitle}>
+                        {showOtpInput ? `OTP sent to +91 ${phone}` : 'Sign in to continue'}
+                    </Text>
+                </View>
+            </SafeAreaView>
 
-                        {/* 3D Illustration Placeholder */}
-                        <View style={styles.illustrationContainer}>
-                            <Image 
-                                source={{ uri: 'https://cdn3d.iconscout.com/3d/premium/thumb/security-check-3d-illustration-download-in-png-blend-fbx-gltf-file-formats--login-password-shield-user-interface-pack-icons-4869687.png' }} 
-                                style={styles.illustration}
-                                resizeMode="contain"
-                            />
-                        </View>
+            {/* Form Sheet */}
+            <View style={styles.sheetContainer}>
+                <KeyboardAvoidingView 
+                    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                    style={styles.sheetContent}
+                >
+                    <View style={{ marginBottom: 30 }}>
+                        <Text style={styles.welcomeText}>
+                            {showOtpInput ? 'Enter OTP' : 'Hello there! 👋'}
+                        </Text>
+                        <Text style={styles.instructionText}>
+                            {showOtpInput 
+                                ? 'Enter the verification code shown in the alert.' 
+                                : 'Please enter your mobile number to sign in.'
+                            }
+                        </Text>
+                    </View>
 
-                        {/* Title Section */}
-                        <View style={styles.textSection}>
-                            <Text style={styles.title}>Verify Phone Number</Text>
-                            <Text style={styles.subtitle}>
-                                Allow a call and call log access to automatically{'\n'}verify your phone number easily.
-                            </Text>
-                        </View>
-
-                        {/* Input Section */}
-                        <View style={styles.bottomSection}>
+                    {/* Conditional Rendering: Phone Input vs OTP Input */}
+                    {!showOtpInput ? (
+                        // PHONE INPUT VIEW
+                        <View style={styles.inputGroup}>
+                            <Text style={styles.label}>Mobile Number</Text>
                             <View style={styles.inputContainer}>
-                                <Text style={styles.countryCode}>(+91)  <Ionicons name="chevron-down" size={14}/></Text>
-                                <View style={styles.verticalLine} />
+                                <Ionicons name="call-outline" size={20} color={Theme.textLight} style={{ marginRight: 10 }} />
                                 <TextInput
                                     style={styles.input}
-                                    placeholder="98765 43210"
+                                    placeholder="Enter 10-digit number"
                                     placeholderTextColor={Theme.textLight}
-                                    keyboardType="phone-pad"
                                     value={phone}
                                     onChangeText={setPhone}
+                                    keyboardType="phone-pad"
                                     maxLength={10}
-                                    editable={!isLoading}
+                                    autoFocus={true}
                                 />
-                                {phone.length > 0 && (
-                                    <TouchableOpacity onPress={() => setPhone('')}>
-                                        <Ionicons name="close-circle" size={20} color={Theme.textLight} />
-                                    </TouchableOpacity>
-                                )}
-                            </View>
-
-                            {/* Main Action Button */}
-                            <TouchableOpacity 
-                                style={styles.primaryButton} 
-                                onPress={handleLogin}
-                                disabled={isLoading}
-                            >
-                                {isLoading ? (
-                                    <ActivityIndicator color="#FFF" />
-                                ) : (
-                                    <Text style={styles.primaryButtonText}>Keep Going</Text>
-                                )}
-                            </TouchableOpacity>
-
-                            {/* Sign Up Option */}
-                            <View style={styles.footer}>
-                                <Text style={styles.footerText}>New user? </Text>
-                                <TouchableOpacity onPress={() => router.push('/(auth)/register')}>
-                                    <Text style={styles.linkText}>Sign Up</Text>
-                                </TouchableOpacity>
                             </View>
                         </View>
+                    ) : (
+                        // OTP INPUT VIEW
+                        <View style={styles.inputGroup}>
+                             <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                                <Text style={styles.label}>One Time Password</Text>
+                                <TouchableOpacity onPress={handleBackToPhone}>
+                                    <Text style={{ color: Theme.primary, fontSize: 12, fontWeight: '600' }}>Change Number</Text>
+                                </TouchableOpacity>
+                             </View>
+                            <View style={styles.inputContainer}>
+                                <Ionicons name="lock-closed-outline" size={20} color={Theme.textLight} style={{ marginRight: 10 }} />
+                                <TextInput
+                                    style={[styles.input, { letterSpacing: 5, fontSize: 18, fontWeight: 'bold' }]}
+                                    placeholder="• • • •"
+                                    placeholderTextColor={Theme.textLight}
+                                    value={otp}
+                                    onChangeText={setOtp}
+                                    keyboardType="number-pad"
+                                    maxLength={4}
+                                    autoFocus={true}
+                                />
+                            </View>
+                            
+                            {/* Resend Timer */}
+                            <View style={styles.resendContainer}>
+                                {canResend ? (
+                                    <TouchableOpacity onPress={handleResendOtp}>
+                                        <Text style={styles.linkText}>Resend OTP</Text>
+                                    </TouchableOpacity>
+                                ) : (
+                                    <Text style={styles.timerText}>Resend OTP in {timer}s</Text>
+                                )}
+                            </View>
+                        </View>
+                    )}
 
+                    {/* Action Button */}
+                    <TouchableOpacity 
+                        style={styles.primaryButton} 
+                        onPress={showOtpInput ? handleVerifyLogin : handleSendOtp}
+                        disabled={isLoading}
+                    >
+                        {isLoading ? (
+                            <ActivityIndicator color="#FFF" />
+                        ) : (
+                            <Text style={styles.primaryButtonText}>
+                                {showOtpInput ? 'Verify & Login' : 'Get OTP'}
+                            </Text>
+                        )}
+                    </TouchableOpacity>
+
+                    {/* Footer Links */}
+                    <View style={styles.footer}>
+                        <Text style={styles.footerText}>Don't have an account? </Text>
+                        <TouchableOpacity onPress={() => router.push('/(auth)/register')}>
+                            <Text style={styles.linkText}>Sign Up</Text>
+                        </TouchableOpacity>
                     </View>
-                </TouchableWithoutFeedback>
-            </KeyboardAvoidingView>
-        </SafeAreaView>
+                </KeyboardAvoidingView>
+            </View>
+        </View>
     );
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: Theme.background },
-    content: { flex: 1, padding: 24 },
+    mainContainer: { flex: 1, backgroundColor: Theme.primary },
+    headerArea: { flex: 0.35, justifyContent: 'center', alignItems: 'center' },
+    logoContainer: { alignItems: 'center' },
+    logoCircle: { width: 80, height: 80, backgroundColor: '#FFF', borderRadius: 40, justifyContent: 'center', alignItems: 'center', marginBottom: 15 },
+    headerTitle: { fontSize: 24, fontWeight: 'bold', color: '#FFF' },
+    headerSubtitle: { fontSize: 14, color: 'rgba(255,255,255,0.8)', marginTop: 5 },
     
-    backButton: { 
-        width: 40, height: 40, borderRadius: 20, backgroundColor: '#F3F4F6', 
-        justifyContent: 'center', alignItems: 'center', marginTop: 10 
+    sheetContainer: { 
+        flex: 0.65, 
+        backgroundColor: Theme.surface, 
+        borderTopLeftRadius: 30, 
+        borderTopRightRadius: 30,
+        overflow: 'hidden'
     },
+    sheetContent: { flex: 1, padding: 24, paddingTop: 40 },
     
-    illustrationContainer: { alignItems: 'center', marginVertical: 30, flex: 1, justifyContent: 'center' },
-    illustration: { width: 200, height: 200 },
-    
-    textSection: { alignItems: 'center', marginBottom: 30 },
-    title: { fontSize: 24, fontWeight: 'bold', color: Theme.text, marginBottom: 10 },
-    subtitle: { fontSize: 14, color: Theme.textLight, textAlign: 'center', lineHeight: 20 },
-    
-    bottomSection: { marginBottom: 20 },
-    
+    welcomeText: { fontSize: 22, fontWeight: 'bold', color: Theme.text, marginBottom: 8 },
+    instructionText: { fontSize: 14, color: Theme.textLight },
+
+    inputGroup: { marginBottom: 20 },
+    label: { fontSize: 14, fontWeight: '600', color: Theme.text, marginBottom: 8 },
     inputContainer: {
-        flexDirection: 'row', alignItems: 'center',
-        backgroundColor: Theme.inputBg, borderRadius: 16, height: 60, paddingHorizontal: 20, marginBottom: 20,
+        flexDirection: 'row', alignItems: 'center', backgroundColor: Theme.inputBg,
+        borderRadius: 12, paddingHorizontal: 15, height: 50,
     },
-    countryCode: { fontSize: 16, color: Theme.text, fontWeight: '600', marginRight: 10 },
-    verticalLine: { width: 1, height: 24, backgroundColor: '#D1D5DB', marginRight: 15 },
-    input: { flex: 1, fontSize: 18, color: Theme.text, fontWeight: '500' },
+    input: { flex: 1, color: Theme.text, fontSize: 15 },
     
+    resendContainer: { alignItems: 'flex-end', marginTop: 10 },
+    timerText: { color: Theme.textLight, fontSize: 13 },
+
     primaryButton: {
-        backgroundColor: Theme.primary, borderRadius: 30, height: 55,
-        justifyContent: 'center', alignItems: 'center',
-        shadowColor: Theme.primary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 10, elevation: 8
+        backgroundColor: Theme.primary, borderRadius: 25, height: 50,
+        justifyContent: 'center', alignItems: 'center', marginTop: 10,
+        shadowColor: Theme.primary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 5
     },
     primaryButtonText: { color: '#FFF', fontWeight: 'bold', fontSize: 16 },
-
-    footer: { flexDirection: 'row', justifyContent: 'center', marginTop: 20 },
+    
+    footer: { flexDirection: 'row', justifyContent: 'center', marginTop: 25 },
     footerText: { color: Theme.textLight, fontSize: 14 },
     linkText: { color: Theme.primary, fontWeight: 'bold', fontSize: 14 },
 });

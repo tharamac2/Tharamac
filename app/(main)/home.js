@@ -1,6 +1,6 @@
 import { FontAwesome, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { useFocusEffect, useRouter } from 'expo-router'; // ✅ Added useFocusEffect
-import { useCallback, useContext, useEffect, useRef, useState } from 'react'; // ✅ Added useCallback
+import { useFocusEffect, useRouter } from 'expo-router';
+import { useCallback, useContext, useEffect, useRef, useState } from 'react';
 import {
     Animated,
     Dimensions,
@@ -17,6 +17,8 @@ import {
     UIManager,
     View
 } from 'react-native';
+// ✅ Import AsyncStorage
+import AsyncStorage from '@react-native-async-storage/async-storage';
 // Import Context
 import { UserContext } from '../../src/context/UserContext';
 
@@ -105,6 +107,8 @@ const SUBSCRIPTION_PLANS = [
 const Header = () => {
     const { userData, theme } = useContext(UserContext);
     const [greeting, setGreeting] = useState('');
+    // ✅ UPDATED: Local state for display name
+    const [displayName, setDisplayName] = useState(userData.name);
 
     useEffect(() => {
         const getGreeting = () => {
@@ -116,6 +120,24 @@ const Header = () => {
         setGreeting(getGreeting());
     }, []);
 
+    // ✅ UPDATED: Fetch name from storage when Header loads
+    useFocusEffect(
+        useCallback(() => {
+            const fetchUserName = async () => {
+                try {
+                    const jsonValue = await AsyncStorage.getItem('userSession');
+                    if (jsonValue != null) {
+                        const user = JSON.parse(jsonValue);
+                        if(user.name) setDisplayName(user.name);
+                    }
+                } catch(e) {
+                    console.log(e);
+                }
+            };
+            fetchUserName();
+        }, [])
+    );
+
     return (
         <View style={styles.headerContainer}>
             <View style={styles.headerTopRow}>
@@ -123,7 +145,8 @@ const Header = () => {
                     <Image source={{ uri: userData.profileImage }} style={styles.headerProfileImage} />
                     <View style={styles.profileTextContainer}>
                         <Text style={styles.welcomeLabel}>{greeting}</Text>
-                        <Text style={styles.userNameText}>{userData.name || 'Tharamac User'}</Text>
+                        {/* ✅ UPDATED: Show fetched name */}
+                        <Text style={styles.userNameText}>{displayName || 'Tharamac User'}</Text>
                     </View>
                 </View>
                 <TouchableOpacity style={styles.notificationBtn}>
@@ -308,7 +331,6 @@ export default function HomeScreen() {
     const [activeTab, setActiveTab] = useState('Home'); 
     const [activeStory, setActiveStory] = useState(null);
 
-    // ✅ FIXED: Reset active tab to 'Home' when screen comes into focus
     useFocusEffect(
         useCallback(() => {
             setActiveTab('Home');
