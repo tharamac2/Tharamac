@@ -74,7 +74,6 @@ const handleDownload = async (image) => {
 };
 
 
-
   const handleShare = async (image) => {
     try {
       if (!(await Sharing.isAvailableAsync())) {
