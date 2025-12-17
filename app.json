@@ -9,7 +9,11 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "Allow Tharamac to access your photos to save templates.",
+        "NSPhotoLibraryAddUsageDescription": "Allow Tharamac to save templates to your gallery."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -19,7 +23,13 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.anonymous.tharamac",
+      "permissions": [
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "ACCESS_MEDIA_LOCATION"
+      ]
     },
     "web": {
       "output": "static",
@@ -38,7 +48,16 @@
             "backgroundColor": "#000000"
           }
         }
-      ]
+      ],
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "Allow Tharamac to access your photos.",
+          "savePhotosPermission": "Allow Tharamac to save photos.",
+          "isAccessMediaLocationEnabled": true
+        }
+      ],
+      "expo-file-system"
     ],
     "experiments": {
       "typedRoutes": true,

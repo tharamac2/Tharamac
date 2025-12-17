@@ -30,15 +30,15 @@ const CATEGORIES = [
 
 // --- DATA: STANDARD PRODUCTS (Grid View & Thumbnails) ---
 const ALL_PRODUCTS = [
-    { id: '1', title: 'Diwali Festival', category: 'Posters', image: 'https://images.unsplash.com/photo-1511367461989-f85a21fda167?w=400&q=80' },
-    { id: '2', title: 'New Year 2025', category: 'Videos', image: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=400&q=80' },
-    { id: '3', title: 'Good Morning', category: 'Greetings', image: 'https://images.unsplash.com/photo-1470252649378-9c29740c9fa8?w=400&q=80' },
-    { id: '4', title: 'Jeevan Anand', category: 'LIC Plans', image: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=400&q=80' },
-    { id: '5', title: 'Business Card', category: 'Business', image: 'https://images.unsplash.com/photo-1559333086-b0a56225a93c?w=400&q=80' },
-    { id: '6', title: 'Success Quote', category: 'Motivation', image: 'https://images.unsplash.com/photo-1552508744-1696d4464960?w=400&q=80' },
-    { id: '7', title: 'Award Certificate', category: 'Certificates', image: 'https://images.unsplash.com/photo-1578269174936-2709b6aeb913?w=400&q=80' },
-    { id: '8', title: 'Company Brochure', category: 'Brochures', image: 'https://images.unsplash.com/photo-1586717791821-3f44a5638d0f?w=400&q=80' },
-    { id: '9', title: 'Holi Special', category: 'Posters', image: 'https://images.unsplash.com/photo-1615967676759-994c6328325e?w=400&q=80' },
+  { id: '1', title: 'Diwali Festival', category: 'Posters', image: require('../../assets/images/posters/diwali-main.jpg') },
+  { id: '2', title: 'New Year 2025', category: 'Videos', image: require('../../assets/images/videos/new-year-main.jpg') },
+  { id: '3', title: 'Good Morning', category: 'Greetings', image: require('../../assets/images/greetings/good-morning-main.jpg') },
+  { id: '4', title: 'Jeevan Anand', category: 'LIC Plans', image: require('../../assets/images/lic-plans/jeevan-anand-main.jpg') },
+  { id: '5', title: 'Business Card', category: 'Business', image: require('../../assets/images/business/business-card-main.jpg') },
+  { id: '6', title: 'Success Quote', category: 'Motivation', image: require('../../assets/images/motivation/success-quote-main.jpg') },
+  { id: '7', title: 'Award Certificate', category: 'Certificates', image: require('../../assets/images/certificates/award-main.jpg') },
+  { id: '8', title: 'Company Brochure', category: 'Brochures', image: require('../../assets/images/brochures/company-brochure-main.jpg') },
+  { id: '9', title: 'Holi Special', category: 'Posters', image: require('../../assets/images/posters/holi-main.jpg') },
 ];
 
 // --- DATA: CALENDAR 2026 ---
