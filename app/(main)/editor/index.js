@@ -1,11 +1,14 @@
 import { Ionicons } from '@expo/vector-icons';
-import * as MediaLibrary from 'expo-media-library';
+import * as ImagePicker from 'expo-image-picker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import * as Sharing from 'expo-sharing';
 import { useContext, useRef, useState } from 'react';
 import {
   Alert,
+  Animated,
   Image,
   KeyboardAvoidingView,
+  PanResponder,
   Platform,
   SafeAreaView,
   ScrollView,
@@ -14,207 +17,203 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  View,
+  View
 } from 'react-native';
 import ViewShot from "react-native-view-shot";
 import { UserContext } from '../../../src/context/UserContext';
+
+// List of colors for the text picker
+const TEXT_COLORS = [
+    '#E91E63', '#1A237E', '#000000', '#4CAF50', '#FF9800', 
+    '#9C27B0', '#F44336', '#2196F3', '#009688', '#795548'
+];
 
 export default function EditorScreen() {
     const router = useRouter();
     const { theme, user } = useContext(UserContext);
     const { image } = useLocalSearchParams();
-    
-    // Ref for capturing the image
     const viewShotRef = useRef();
 
-    // State for user input
+    // --- STATES ---
     const [recipientName, setRecipientName] = useState('');
-    const [selectedTab, setSelectedTab] = useState('Text');
+    const [nameColor, setNameColor] = useState('#E91E63'); // Current selected color
+    const [fontFamily, setFontFamily] = useState('System');
+    const [footerBg, setFooterBg] = useState('rgba(255,255,255,0.95)');
+    const [footerTextColor, setFooterTextColor] = useState('#1A237E');
+    const [overlayImage, setOverlayImage] = useState(null);
+    
+    // --- DRAG SETUP ---
+    const panText = useRef(new Animated.ValueXY()).current;
+    const panPhoto = useRef(new Animated.ValueXY()).current;
 
-    // Profile Details
-    const businessName = user?.businessName || "Your Business Name";
-    const phoneNumber = user?.phone || "9445438846";
-    const website = user?.website || "www.yourwebsite.com";
+    const createPanResponder = (panValue) => PanResponder.create({
+        onStartShouldSetPanResponder: () => true,
+        onPanResponderGrant: () => {
+            panValue.setOffset({ x: panValue.x._value, y: panValue.y._value });
+            panValue.setValue({ x: 0, y: 0 });
+        },
+        onPanResponderMove: Animated.event([null, { dx: panValue.x, dy: panValue.y }], { useNativeDriver: false }),
+        onPanResponderRelease: () => { panValue.flattenOffset(); },
+    });
 
-    // --- SAVE TO GALLERY FUNCTION ---
-    const handleSave = async () => {
-        try {
-            // Request only 'photo' permissions specifically
-            const { status } = await MediaLibrary.requestPermissionsAsync(false); 
-            
-            if (status !== 'granted') {
-                Alert.alert("Permission Required", "Please allow gallery access in settings to save posters.");
-                return;
-            }
+    const textPanResponder = useRef(createPanResponder(panText)).current;
+    const photoPanResponder = useRef(createPanResponder(panPhoto)).current;
 
-            const uri = await viewShotRef.current.capture();
-            await MediaLibrary.createAssetAsync(uri);
-            Alert.alert("Success ✅", "Poster saved to your mobile gallery!");
-        } catch (error) {
-            console.error(error);
-            // If it still fails in Expo Go, it's likely the Android 14 restriction
-            Alert.alert("Error", "Expo Go has limited gallery access on newer Android versions. You may need to create a 'Development Build'.");
-        }
+    // --- HANDLERS ---
+    const handleAddPhoto = async () => {
+        let result = await ImagePicker.launchImageLibraryAsync({
+            allowsEditing: true,
+            aspect: [1, 1],
+            quality: 1,
+        });
+        if (!result.canceled) setOverlayImage(result.assets[0].uri);
+    };
+
+    const confirmDelete = (type) => {
+        Alert.alert("Delete", `Remove this ${type}?`, [
+            { text: "Cancel", style: "cancel" },
+            { text: "Delete", style: "destructive", onPress: () => {
+                if(type === 'text') { setRecipientName(''); panText.setValue({x:0, y:0}); }
+                else { setOverlayImage(null); panPhoto.setValue({x:0, y:0}); }
+            }}
+        ]);
+    };
+
+    const handleAction = async () => {
+        const uri = await viewShotRef.current.capture();
+        await Sharing.shareAsync(uri);
     };
 
     return (
         <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
             <StatusBar barStyle={theme.dark ? "light-content" : "dark-content"} />
-            
-            <KeyboardAvoidingView 
-                behavior={Platform.OS === 'ios' ? 'padding' : 'height'} 
-                style={{ flex: 1 }}
-            >
-                {/* Header */}
-                <View style={[styles.header, { borderBottomColor: theme.border }]}>
-                    <TouchableOpacity onPress={() => router.back()}>
-                        <Ionicons name="close" size={28} color={theme.text} />
-                    </TouchableOpacity>
+            <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
+                
+                <View style={[styles.header, { paddingTop: Platform.OS === 'android' ? 45 : 10 }]}>
+                    <TouchableOpacity onPress={() => router.back()}><Ionicons name="close" size={30} color={theme.text} /></TouchableOpacity>
                     <Text style={[styles.title, { color: theme.text }]}>Editor</Text>
-                    <TouchableOpacity onPress={handleSave}>
-                        <Text style={[styles.save, { color: theme.primary }]}>Save</Text>
-                    </TouchableOpacity>
+                    <View style={{ width: 30 }} />
                 </View>
 
-                <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-                    
-                    {/* 1. REAL-TIME CANVAS PREVIEW (This part gets saved) */}
+                <ScrollView contentContainerStyle={styles.scrollContent}>
+                    {/* 1. INPUT & COLOR PICKER */}
+                    <View style={styles.topSection}>
+                        <Text style={[styles.label, { color: theme.textLight }]}>Recipient Name:</Text>
+                        <TextInput
+                            style={[styles.input, { backgroundColor: theme.inputBg, color: theme.text, borderColor: theme.border }]}
+                            placeholder="Type name here..."
+                            value={recipientName}
+                            onChangeText={setRecipientName}
+                        />
+                        
+                        {/* COLOR SELECTION ROW */}
+                        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.colorPickerRow}>
+                            {TEXT_COLORS.map((color) => (
+                                <TouchableOpacity 
+                                    key={color} 
+                                    onPress={() => setNameColor(color)}
+                                    style={[
+                                        styles.colorOption, 
+                                        { backgroundColor: color, borderColor: nameColor === color ? '#000' : 'transparent' }
+                                    ]}
+                                >
+                                    {nameColor === color && <Ionicons name="checkmark" size={16} color="white" />}
+                                </TouchableOpacity>
+                            ))}
+                        </ScrollView>
+                    </View>
+
+                    {/* 2. CENTERED CANVAS */}
                     <ViewShot ref={viewShotRef} options={{ format: "jpg", quality: 1.0 }}>
-                        <View style={[styles.canvas, { backgroundColor: '#FFF' }]}>
-                            {image && (
-                                <Image source={{ uri: image }} style={styles.image} resizeMode="cover" />
+                        <View style={styles.canvas}>
+                            {image && <Image source={{ uri: image }} style={styles.image} />}
+                            
+                            {overlayImage && (
+                                <Animated.View {...photoPanResponder.panHandlers} style={[panPhoto.getLayout(), styles.draggableWrapper]}>
+                                    <Image source={{ uri: overlayImage }} style={styles.userOverlay} />
+                                </Animated.View>
                             )}
                             
-                            {/* Personalization Overlays */}
-                            <View style={styles.overlayContainer}>
-                                <Text style={styles.overlayRecipient}>
-                                    {recipientName || ""}
-                                </Text>
+                            {recipientName !== '' && (
+                                <Animated.View {...textPanResponder.panHandlers} style={[panText.getLayout(), styles.draggableWrapper, { width: '100%' }]}>
+                                    <Text style={[styles.overlayRecipient, { color: nameColor, fontFamily: fontFamily }]}>{recipientName}</Text>
+                                </Animated.View>
+                            )}
 
-                                {/* Business Footer */}
-                                <View style={styles.businessFooter}>
-                                    <Text style={styles.bizName}>{businessName}</Text>
-                                    <Text style={styles.bizTagline}>Digital Marketing & Services</Text>
-                                    <View style={styles.bizContactRow}>
-                                        <Text style={styles.bizContactText}>{phoneNumber}</Text>
-                                        <Text style={styles.bizContactText}>{website}</Text>
-                                    </View>
+                            <View style={[styles.businessFooter, { backgroundColor: footerBg }]}>
+                                <Text style={[styles.bizName, { color: footerTextColor }]}>{user?.businessName || "Your Business"}</Text>
+                                <View style={styles.bizContactRow}>
+                                    <Text style={[styles.bizContactText, { color: footerTextColor }]}>{user?.phone || "0000000000"}</Text>
                                 </View>
                             </View>
                         </View>
                     </ViewShot>
 
-                    {/* 2. PERSONALIZATION TOOLS (Moved below the image) */}
-                    <View style={styles.toolSection}>
-                        <View style={styles.labelRow}>
-                            <Text style={[styles.label, { color: theme.textLight }]}>Recipient Name:</Text>
-                            <View style={styles.inputTools}>
-                                <Ionicons name="color-wand-outline" size={18} color={theme.primary} />
-                                <Text style={{ marginHorizontal: 8, color: theme.text, fontSize: 12 }}>Edit Styles</Text>
-                            </View>
+                    {/* 3. BUTTONS */}
+                    <View style={styles.buttonSection}>
+                        <View style={styles.row}>
+                            <TouchableOpacity style={styles.btn} onPress={handleAddPhoto}>
+                                <Ionicons name="image-outline" size={20} color={theme.primary} />
+                                <Text style={styles.btnLabel}>Add Photo</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={styles.btn} onPress={() => setFooterBg('#F5F5F5')}>
+                                <Ionicons name="color-fill-outline" size={20} color={theme.primary} />
+                                <Text style={styles.btnLabel}>Background</Text>
+                            </TouchableOpacity>
                         </View>
                         
-                        <TextInput
-                            style={[styles.input, { 
-                                backgroundColor: theme.inputBg, 
-                                color: theme.text, 
-                                borderColor: theme.border 
-                            }]}
-                            placeholder="Type name here..."
-                            placeholderTextColor={theme.textLight}
-                            value={recipientName}
-                            onChangeText={setRecipientName}
-                        />
-
-                        <View style={styles.quickActions}>
-                            <TouchableOpacity style={[styles.actionBtn, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-                                <Ionicons name="image-outline" size={20} color={theme.primary} />
-                                <Text style={[styles.actionText, { color: theme.text }]}>Add Photo</Text>
+                        <View style={[styles.row, { marginTop: 12 }]}>
+                            <TouchableOpacity style={[styles.btn, styles.whatsappBtn]} onPress={handleAction}>
+                                <Ionicons name="logo-whatsapp" size={20} color="#FFF" />
+                                <Text style={styles.whiteBtnText}>WhatsApp</Text>
                             </TouchableOpacity>
-                            <TouchableOpacity style={[styles.actionBtn, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-                                <Ionicons name="color-palette-outline" size={20} color={theme.primary} />
-                                <Text style={[styles.actionText, { color: theme.text }]}>Background</Text>
+                            <TouchableOpacity style={[styles.btn, { backgroundColor: theme.primary }]} onPress={handleAction}>
+                                <Ionicons name="share-social-outline" size={20} color="#FFF" />
+                                <Text style={styles.whiteBtnText}>Share</Text>
+                            </TouchableOpacity>
+                        </View>
+
+                        <View style={[styles.row, { marginTop: 12 }]}>
+                            <TouchableOpacity style={styles.deleteBtn} onPress={() => confirmDelete('text')}>
+                                <Ionicons name="trash-outline" size={18} color="#FF5252" />
+                                <Text style={styles.deleteText}>Delete Name</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={styles.deleteBtn} onPress={() => confirmDelete('photo')}>
+                                <Ionicons name="trash-outline" size={18} color="#FF5252" />
+                                <Text style={styles.deleteText}>Delete Photo</Text>
                             </TouchableOpacity>
                         </View>
                     </View>
                 </ScrollView>
-
-                {/* Bottom Editor Tabs */}
-                <View style={[styles.footer, { backgroundColor: theme.surface, borderTopColor: theme.border }]}>
-                    <Tool icon="text" label="Text" active={selectedTab === 'Text'} onPress={() => setSelectedTab('Text')} theme={theme} />
-                    <Tool icon="happy" label="Sticker" active={selectedTab === 'Sticker'} onPress={() => setSelectedTab('Sticker')} theme={theme} />
-                    <Tool icon="color-filter" label="Filter" active={selectedTab === 'Filter'} onPress={() => setSelectedTab('Filter')} theme={theme} />
-                    <Tool icon="crop" label="Crop" active={selectedTab === 'Crop'} onPress={() => setSelectedTab('Crop')} theme={theme} />
-                </View>
             </KeyboardAvoidingView>
         </SafeAreaView>
     );
 }
 
-const Tool = ({ icon, label, active, onPress, theme }) => (
-    <TouchableOpacity style={styles.tool} onPress={onPress}>
-        <Ionicons name={active ? icon : `${icon}-outline`} size={22} color={active ? theme.primary : theme.textLight} />
-        <Text style={[styles.toolLabel, { color: active ? theme.primary : theme.textLight }]}>{label}</Text>
-    </TouchableOpacity>
-);
-
 const styles = StyleSheet.create({
     container: { flex: 1 },
-    header: { flexDirection: 'row', justifyContent: 'space-between', padding: 15, alignItems: 'center', borderBottomWidth: 1 },
-    title: { fontSize: 18, fontWeight: 'bold' },
-    save: { fontSize: 16, fontWeight: 'bold' },
-    scrollContent: { padding: 15 },
-    
-    // Canvas Styling
-    canvas: { 
-        width: '100%', 
-        aspectRatio: 1, 
-        borderRadius: 12, 
-        overflow: 'hidden', 
-        elevation: 10,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 5,
-        position: 'relative'
-    },
+    header: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 20, paddingBottom: 15, alignItems: 'center' },
+    title: { fontSize: 20, fontWeight: 'bold' },
+    scrollContent: { padding: 20 },
+    topSection: { marginBottom: 20 },
+    label: { fontSize: 14, fontWeight: '700', marginBottom: 8 },
+    input: { height: 50, borderRadius: 12, borderWidth: 1, paddingHorizontal: 15, marginBottom: 15 },
+    colorPickerRow: { flexDirection: 'row', paddingVertical: 5 },
+    colorOption: { width: 34, height: 34, borderRadius: 17, marginRight: 12, borderWidth: 2, justifyContent: 'center', alignItems: 'center' },
+    canvas: { width: '100%', aspectRatio: 1, borderRadius: 12, overflow: 'hidden', backgroundColor: '#EEE' },
     image: { width: '100%', height: '100%' },
-    overlayContainer: { ...StyleSheet.absoluteFillObject, justifyContent: 'center', alignItems: 'center' },
-    overlayRecipient: {
-        fontSize: 26,
-        fontWeight: '900',
-        color: '#E91E63',
-        textAlign: 'center',
-        marginTop: '20%',
-        textShadowColor: 'rgba(255,255,255,0.8)',
-        textShadowOffset: { width: 1, height: 1 },
-        textShadowRadius: 2,
-    },
-    businessFooter: {
-        position: 'absolute',
-        bottom: 0,
-        width: '100%',
-        backgroundColor: 'rgba(255,255,255,0.95)',
-        paddingVertical: 6,
-        alignItems: 'center'
-    },
-    bizName: { fontSize: 13, fontWeight: 'bold', color: '#1A237E' },
-    bizTagline: { fontSize: 9, color: '#555', textTransform: 'uppercase' },
-    bizContactRow: { flexDirection: 'row', marginTop: 2 },
-    bizContactText: { fontSize: 9, color: '#333', marginHorizontal: 8, fontWeight: '500' },
-
-    // Tool Section
-    toolSection: { marginTop: 20, paddingBottom: 20 },
-    labelRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 },
-    label: { fontSize: 14, fontWeight: '700' },
-    inputTools: { flexDirection: 'row', alignItems: 'center' },
-    input: { height: 50, borderRadius: 12, borderWidth: 1, paddingHorizontal: 15, fontSize: 16, marginBottom: 15 },
-    quickActions: { flexDirection: 'row', justifyContent: 'space-between' },
-    actionBtn: { flex: 0.48, height: 45, borderRadius: 10, borderWidth: 1, flexDirection: 'row', justifyContent: 'center', alignItems: 'center' },
-    actionText: { marginLeft: 8, fontSize: 13, fontWeight: '600' },
-
-    // Footer
-    footer: { flexDirection: 'row', justifyContent: 'space-around', paddingVertical: 10, borderTopWidth: 1 },
-    tool: { alignItems: 'center', flex: 1 },
-    toolLabel: { fontSize: 11, marginTop: 4 },
+    draggableWrapper: { position: 'absolute', zIndex: 100 },
+    userOverlay: { width: 80, height: 80, borderRadius: 40, borderWidth: 2, borderColor: '#FFF' },
+    overlayRecipient: { fontSize: 28, fontWeight: 'bold', textAlign: 'center' },
+    businessFooter: { position: 'absolute', bottom: 0, width: '100%', paddingVertical: 10, alignItems: 'center' },
+    bizName: { fontSize: 13, fontWeight: 'bold' },
+    bizContactText: { fontSize: 10, marginTop: 4 },
+    buttonSection: { marginTop: 25, paddingBottom: 30 },
+    row: { flexDirection: 'row', justifyContent: 'space-between' },
+    btn: { flex: 0.48, height: 48, borderRadius: 10, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#DDD' },
+    btnLabel: { marginLeft: 8, fontWeight: '600' },
+    whatsappBtn: { backgroundColor: '#25D366', borderColor: '#25D366' },
+    whiteBtnText: { color: '#FFF', marginLeft: 8, fontWeight: 'bold' },
+    deleteBtn: { flex: 0.48, height: 40, borderRadius: 10, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#FF5252' },
+    deleteText: { color: '#FF5252', marginLeft: 6, fontWeight: '600', fontSize: 13 }
 });
