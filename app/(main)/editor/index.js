@@ -48,7 +48,7 @@ export default function EditorScreen() {
     const [footerTextColor, setFooterTextColor] = useState('#1A237E');
     const [overlayImage, setOverlayImage] = useState(null);
     
-   // --- 1. AUTO-FETCH DATA ---
+    // --- AUTO-FETCH DATA ---
     useEffect(() => {
         const fetchProfileFromDB = async () => {
             try {
@@ -56,18 +56,10 @@ export default function EditorScreen() {
                 if (session) {
                     const sessionData = JSON.parse(session);
                     const userPhone = sessionData.phone; 
-
-                    console.log("Fetching profile for:", userPhone);
-
                     const response = await fetch(`${API_BASE_URL}/get_profile.php?phone=${userPhone}`);
                     const json = await response.json();
-
-                    console.log("API Response:", json); // ✅ CHECK YOUR CONSOLE FOR THIS
-
                     if (json.status === 'success') {
                         setProfile(json.data);
-                    } else {
-                        Alert.alert("Notice", "Profile not found. Please set up your business profile.");
                     }
                 }
             } catch (error) {
@@ -103,14 +95,14 @@ export default function EditorScreen() {
 
     const handleBackgroundChange = () => {
         const bgConfigs = [
-            { bg: 'rgba(255,255,255,0.95)', text: '#1A237E' }, // White
-            { bg: '#1A237E', text: '#FFFFFF' },               // Navy Blue
-            { bg: '#000000', text: '#FFFFFF' },               // Black
-            { bg: '#F5F5F5', text: '#333333' },               // Light Grey
-            { bg: '#FFD700', text: '#000000' },               // Gold
-            { bg: '#008080', text: '#FFFFFF' },               // Teal
-            { bg: '#E91E63', text: '#FFFFFF' },               // Pink
-            { bg: '#4CAF50', text: '#FFFFFF' }                // Green
+            { bg: 'rgba(255,255,255,0.95)', text: '#1A237E' }, 
+            { bg: '#1A237E', text: '#FFFFFF' },
+            { bg: '#000000', text: '#FFFFFF' },
+            { bg: '#F5F5F5', text: '#333333' },
+            { bg: '#FFD700', text: '#000000' },
+            { bg: '#008080', text: '#FFFFFF' },
+            { bg: '#E91E63', text: '#FFFFFF' },
+            { bg: '#4CAF50', text: '#FFFFFF' }
         ];
         const currentIndex = bgConfigs.findIndex(c => c.bg === footerBg);
         const next = bgConfigs[(currentIndex + 1) % bgConfigs.length];
@@ -152,7 +144,7 @@ export default function EditorScreen() {
 
                 <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
                     
-                    {/* Tool Section: Old Design Style */}
+                    {/* Tool Section */}
                     <View style={styles.topSection}>
                         <View style={styles.labelRow}>
                             <Text style={[styles.label, { color: theme.textLight }]}>Recipient Name:</Text>
@@ -179,22 +171,25 @@ export default function EditorScreen() {
                             ))}
                         </ScrollView>
 
-                        {/* Text Size Slider */}
+                        {/* ✅ TEXT SIZE SLIDER */}
                         <View style={styles.sliderRow}>
                             <Ionicons name="resize" size={20} color={theme.textLight} />
                             <Slider
-                                style={{ flex: 1, height: 40 }}
+                                style={{ flex: 1, height: 40, marginLeft: 10 }}
                                 minimumValue={18}
-                                maximumValue={70}
+                                maximumValue={80}
+                                step={1}
                                 value={textSize}
-                                onValueChange={setTextSize}
+                                onValueChange={(val) => setTextSize(val)}
                                 minimumTrackTintColor={theme.primary}
                                 maximumTrackTintColor="#DDD"
+                                thumbTintColor={theme.primary}
                             />
+                            <Text style={{color: theme.textLight, marginLeft: 5, fontSize: 12}}>{Math.round(textSize)}</Text>
                         </View>
                     </View>
 
-                    {/* CANVAS AREA */}
+                    {/* Canvas Area */}
                     <ViewShot ref={viewShotRef} options={{ format: "jpg", quality: 1.0 }}>
                         <View style={styles.canvas}>
                             {image && <Image source={{ uri: image }} style={styles.image} />}
@@ -207,15 +202,19 @@ export default function EditorScreen() {
                             
                             {recipientName !== '' && (
                                 <Animated.View {...textPanResponder.panHandlers} style={[panText.getLayout(), styles.draggableWrapper, { width: '100%' }]}>
-                                    <Text style={[styles.overlayRecipient, { color: nameColor }]}>{recipientName}</Text>
+                                    {/* ✅ FIXED: Applied textSize and fontFamily state here */}
+                                    <Text style={[
+                                        styles.overlayRecipient, 
+                                        { color: nameColor, fontSize: textSize, fontFamily: fontFamily }
+                                    ]}>
+                                        {recipientName}
+                                    </Text>
                                 </Animated.View>
                             )}
 
-                            {/* --- BUSINESS FOOTER --- */}
+                            {/* Business Footer */}
                             <View style={[styles.businessFooter, { backgroundColor: footerBg }]}>
                                 <View style={styles.footerRow}>
-                                    
-                                    {/* 1. LOGO */}
                                     <View style={styles.logoContainer}>
                                         {profile?.company_logo ? (
                                             <Image source={{ uri: profile.company_logo }} style={styles.logoImage} resizeMode="contain" />
@@ -223,48 +222,30 @@ export default function EditorScreen() {
                                             <Ionicons name="business" size={24} color={footerTextColor} />
                                         )}
                                     </View>
-
-                                    {/* 2. DETAILS (Stacked) */}
                                     <View style={styles.detailsContainer}>
-                                        
-                                        {/* Company Name */}
                                         <Text style={[styles.bizName, { color: footerTextColor }]} numberOfLines={1}>
                                             {profile?.company_name || "Company Name"}
                                         </Text>
-
-                                        {/* Address - Force show 'Address not set' if null to debug */}
                                         <Text style={[styles.bizAddress, { color: footerTextColor }]} numberOfLines={2}>
                                             {profile?.company_address || "Address not set"}
                                         </Text>
-
-                                        {/* Contact Row: Phone | Website */}
                                         <View style={styles.contactRow}>
                                             <Text style={[styles.contactText, { color: footerTextColor }]}>
                                                 📞 {profile?.company_phone || profile?.phone || "No Phone"}
                                             </Text>
-                                            
-                                            {/* Show website if exists */}
-                                            {profile?.website ? (
+                                            {profile?.website && (
                                                 <Text style={[styles.contactText, { color: footerTextColor, marginLeft: 8 }]}>
                                                     🌐 {profile.website}
                                                 </Text>
-                                            ) : null}
+                                            )}
                                         </View>
-                                        
-                                        {/* Email */}
-                                        {profile?.self_email ? (
-                                            <Text style={[styles.contactText, { color: footerTextColor, marginTop: 2 }]}>
-                                                ✉️ {profile.self_email}
-                                            </Text>
-                                        ) : null}
                                     </View>
-
                                 </View>
                             </View>
                         </View>
                     </ViewShot>
 
-                    {/* Bottom Buttons Section */}
+                    {/* Buttons Section */}
                     <View style={styles.buttonSection}>
                         <View style={styles.row}>
                             <TouchableOpacity style={styles.btn} onPress={handleAddPhoto}>
@@ -288,7 +269,6 @@ export default function EditorScreen() {
                             </TouchableOpacity>
                         </View>
 
-                        {/* Delete Logic: Disabled if items are missing */}
                         <View style={[styles.row, { marginTop: 12 }]}>
                             <TouchableOpacity 
                                 style={[styles.delBtn, { borderColor: recipientName ? '#FF5252' : '#EEE' }]} 
@@ -332,11 +312,15 @@ const styles = StyleSheet.create({
     draggableWrapper: { position: 'absolute', zIndex: 100 },
     userOverlay: { width: 80, height: 80, borderRadius: 40, borderWidth: 2, borderColor: '#FFF' },
     overlayRecipient: { fontWeight: 'bold', textAlign: 'center' },
-    businessFooter: { position: 'absolute', bottom: 0, width: '100%', paddingVertical: 10 },
-    footerContent: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center' },
-    textContainer: { alignItems: 'center' },
-    bizName: { fontSize: 13, fontWeight: 'bold' },
-    bizContactText: { fontSize: 10 },
+    businessFooter: { position: 'absolute', bottom: 0, width: '100%', paddingVertical: 10, paddingHorizontal: 10 },
+    footerRow: { flexDirection: 'row', alignItems: 'center' },
+    logoContainer: { width: 45, height: 45, marginRight: 10, justifyContent: 'center', alignItems: 'center' },
+    logoImage: { width: '100%', height: '100%' },
+    detailsContainer: { flex: 1 },
+    bizName: { fontSize: 12, fontWeight: 'bold', textTransform: 'uppercase' },
+    bizAddress: { fontSize: 8, marginTop: 1 },
+    contactRow: { flexDirection: 'row', marginTop: 2 },
+    contactText: { fontSize: 8, fontWeight: '700' },
     buttonSection: { marginTop: 25, paddingBottom: 40 },
     row: { flexDirection: 'row', justifyContent: 'space-between' },
     btn: { flex: 0.48, height: 48, borderRadius: 12, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#DDD' },
