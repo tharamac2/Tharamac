@@ -5,20 +5,20 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as Sharing from 'expo-sharing';
 import { useContext, useEffect, useRef, useState } from 'react';
 import {
-  Alert,
-  Animated,
-  Image,
-  KeyboardAvoidingView,
-  PanResponder,
-  Platform,
-  SafeAreaView,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View
+    Alert,
+    Animated,
+    Image,
+    KeyboardAvoidingView,
+    PanResponder,
+    Platform,
+    SafeAreaView,
+    ScrollView,
+    StatusBar,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View
 } from 'react-native';
 import ViewShot from "react-native-view-shot";
 import { UserContext } from '../../../src/context/UserContext';

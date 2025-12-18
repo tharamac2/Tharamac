@@ -1,35 +1,266 @@
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
-import { Platform, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import {
+    ActivityIndicator,
+    Alert,
+    Image,
+    Platform,
+    ScrollView,
+    StatusBar,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View
+} from 'react-native';
 
-const Colors = { primary: '#FF3B30', background: '#F9F9F9', text: '#1F2937', inputBg: '#FFFFFF', border: '#E5E7EB' };
+// ✅ IMPORT API CONFIG
+import { API_BASE_URL } from '../../src/config/ApiConfig';
+
+// Brand Colors (Purple)
+const Colors = { 
+    primary: '#ff3b30ff', 
+    background: '#F9FAFB', 
+    text: '#1F2937', 
+    textLight: '#6B7280',
+    inputBg: '#FFFFFF', 
+    border: '#E5E7EB',
+    surface: '#FFFFFF'
+};
 
 export default function BusinessDetails() {
     const router = useRouter();
+    const [loading, setLoading] = useState(false);
+    const [userPhone, setUserPhone] = useState('');
+
+    // --- State Variables ---
+    const [companyName, setCompanyName] = useState('');
+    const [logo, setLogo] = useState(null);
+    const [address, setAddress] = useState('');
+    const [companyPhone, setCompanyPhone] = useState('');
+    const [website, setWebsite] = useState('');
+
+    const [selfName, setSelfName] = useState('');
+    const [designation, setDesignation] = useState('');
+    const [photo, setPhoto] = useState(null);
+    const [selfPhone, setSelfPhone] = useState('');
+    const [email, setEmail] = useState('');
+
+    // --- 1. Load Data on Startup ---
+    useEffect(() => {
+        const loadUserData = async () => {
+            try {
+                // Get Phone Number from Session
+                const session = await AsyncStorage.getItem('userSession');
+                if (session) {
+                    const parsed = JSON.parse(session);
+                    setUserPhone(parsed.phone);
+                    
+                    // Optional: Fetch latest data from server to pre-fill
+                    // For now, we use session data or empty strings
+                    setCompanyName(parsed.businessName || '');
+                    setSelfName(parsed.name || '');
+                    setCompanyPhone(parsed.phone || '');
+                    setSelfPhone(parsed.phone || '');
+                }
+            } catch (error) {
+                console.log("Error loading session:", error);
+            }
+        };
+        loadUserData();
+    }, []);
+
+    // --- Image Picker ---
+    const pickImage = async (setFunction) => {
+        let result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: true,
+            aspect: [1, 1],
+            quality: 0.8,
+        });
+
+        if (!result.canceled) {
+            setFunction(result.assets[0].uri);
+        }
+    };
+
+    // --- 2. Save Data to MySQL ---
+    const handleSave = async () => {
+        if (!userPhone) {
+            Alert.alert("Error", "User session not found. Please login again.");
+            return;
+        }
+
+        setLoading(true);
+
+        const formData = new FormData();
+        // Mandatory Key to identify user
+        formData.append('user_phone', userPhone);
+        
+        // Text Fields
+        formData.append('company_name', companyName);
+        formData.append('company_address', address);
+        formData.append('company_phone', companyPhone);
+        formData.append('website', website);
+        formData.append('self_name', selfName);
+        formData.append('designation', designation);
+        formData.append('self_email', email);
+        formData.append('save_format', 'PNG'); // Default
+
+        // Images (Only append if user selected a new one)
+        if (logo && !logo.startsWith('http')) { 
+            let filename = logo.split('/').pop();
+            let match = /\.(\w+)$/.exec(filename);
+            let type = match ? `image/${match[1]}` : `image/jpeg`;
+            formData.append('logo', { uri: logo, name: filename, type });
+        }
+
+        if (photo && !photo.startsWith('http')) {
+            let filename = photo.split('/').pop();
+            let match = /\.(\w+)$/.exec(filename);
+            let type = match ? `image/${match[1]}` : `image/jpeg`;
+            formData.append('photo', { uri: photo, name: filename, type });
+        }
+
+        try {
+            // ✅ CALL PHP API
+            const response = await fetch(`${API_BASE_URL}/save_onboarding.php`, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            });
+
+            const result = await response.json();
+
+            if (result.status === 'success') {
+                Alert.alert("Success", "Profile Updated Successfully!");
+                
+                // Optional: Update local storage with new names
+                const updatedSession = { 
+                    phone: userPhone, 
+                    name: selfName, 
+                    businessName: companyName 
+                };
+                await AsyncStorage.setItem('userSession', JSON.stringify(updatedSession));
+                
+                router.back();
+            } else {
+                Alert.alert("Update Failed", result.message || "Unknown error occurred");
+            }
+
+        } catch (error) {
+            console.error(error);
+            Alert.alert("Network Error", "Could not connect to server.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
         <View style={styles.container}>
             <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent={true} />
             
+            {/* Header */}
             <View style={styles.header}>
-                <TouchableOpacity onPress={() => router.back()}><Ionicons name="arrow-back" size={24} color={Colors.text} /></TouchableOpacity>
-                <Text style={styles.title}>Business Details</Text>
-                <View style={{ width: 24 }} />
+                <TouchableOpacity onPress={() => router.back()}>
+                    <Ionicons name="arrow-back" size={24} color={Colors.text} />
+                </TouchableOpacity>
+                <Text style={styles.title}>Edit Profile</Text>
+                <View style={{ width: 24 }} /> 
             </View>
 
-            <ScrollView contentContainerStyle={styles.form}>
-                <Text style={styles.label}>Business Name</Text>
-                <TextInput style={styles.input} placeholder="Tharamac Agency" />
-                <Text style={styles.label}>Designation</Text>
-                <TextInput style={styles.input} placeholder="CEO / Manager" />
-                <Text style={styles.label}>Website</Text>
-                <TextInput style={styles.input} placeholder="www.yourbusiness.com" />
-                <Text style={styles.label}>Address</Text>
-                <TextInput style={[styles.input, { height: 100 }]} multiline placeholder="123 Street, City, State" />
-                <TouchableOpacity style={styles.saveBtn}><Text style={styles.saveBtnText}>Update Info</Text></TouchableOpacity>
+            <ScrollView contentContainerStyle={styles.form} showsVerticalScrollIndicator={false}>
+                
+                {/* --- COMPANY SECTION --- */}
+                <View style={styles.sectionContainer}>
+                    <SectionHeader title="Company Details" icon="business" />
+
+                    <InputField label="Company Name" value={companyName} onChangeText={setCompanyName} placeholder="Ex: Tharamac Digitals" />
+                    
+                    {/* Logo Upload */}
+                    <Text style={styles.label}>Company Logo</Text>
+                    <TouchableOpacity style={styles.imageBox} onPress={() => pickImage(setLogo)}>
+                        {logo ? (
+                            <Image source={{ uri: logo }} style={styles.uploadedImg} />
+                        ) : (
+                            <View style={styles.placeholder}>
+                                <Ionicons name="cloud-upload-outline" size={28} color={Colors.primary} />
+                                <Text style={styles.placeholderText}>Upload Logo</Text>
+                            </View>
+                        )}
+                    </TouchableOpacity>
+
+                    <InputField label="Address" value={address} onChangeText={setAddress} placeholder="Full Address" multiline />
+                    <InputField label="Company Phone" value={companyPhone} onChangeText={setCompanyPhone} keyboardType="phone-pad" placeholder="+91 98765 43210" />
+                    <InputField label="Website" value={website} onChangeText={setWebsite} placeholder="www.yourwebsite.com" />
+                </View>
+
+                {/* --- SELF SECTION --- */}
+                <View style={styles.sectionContainer}>
+                    <SectionHeader title="Personal Details" icon="person" />
+
+                    <InputField label="Your Name" value={selfName} onChangeText={setSelfName} placeholder="John Doe" />
+                    <InputField label="Designation" value={designation} onChangeText={setDesignation} placeholder="Ex: CEO / Manager" />
+
+                    {/* Photo Upload */}
+                    <Text style={styles.label}>Your Photo</Text>
+                    <TouchableOpacity style={styles.imageBox} onPress={() => pickImage(setPhoto)}>
+                        {photo ? (
+                            <Image source={{ uri: photo }} style={styles.uploadedImg} />
+                        ) : (
+                            <View style={styles.placeholder}>
+                                <Ionicons name="camera-outline" size={28} color={Colors.primary} />
+                                <Text style={styles.placeholderText}>Upload Photo</Text>
+                            </View>
+                        )}
+                    </TouchableOpacity>
+
+                    <InputField label="Your Phone" value={selfPhone} onChangeText={setSelfPhone} keyboardType="phone-pad" placeholder="+91 98765 43210" />
+                    <InputField label="Email" value={email} onChangeText={setEmail} keyboardType="email-address" placeholder="email@example.com" />
+                </View>
+
+                {/* --- SAVE BUTTON --- */}
+                <TouchableOpacity style={styles.saveBtn} onPress={handleSave} disabled={loading}>
+                    {loading ? (
+                        <ActivityIndicator color="#FFF" />
+                    ) : (
+                        <Text style={styles.saveBtnText}>Update Profile</Text>
+                    )}
+                </TouchableOpacity>
+
+                <View style={{ height: 40 }} />
             </ScrollView>
         </View>
     );
 }
+
+// --- Helper Components ---
+const InputField = ({ label, value, onChangeText, placeholder, multiline, keyboardType }) => (
+    <View style={styles.inputGroup}>
+        <Text style={styles.label}>{label}</Text>
+        <TextInput 
+            style={[styles.input, multiline && styles.textArea]} 
+            value={value}
+            onChangeText={onChangeText}
+            placeholder={placeholder}
+            placeholderTextColor="#9CA3AF"
+            multiline={multiline}
+            keyboardType={keyboardType}
+        />
+    </View>
+);
+
+const SectionHeader = ({ title, icon }) => (
+    <View style={styles.sectionHeader}>
+        <Ionicons name={icon} size={20} color={Colors.primary} style={{ marginRight: 8 }} />
+        <Text style={styles.sectionTitle}>{title}</Text>
+    </View>
+);
 
 const styles = StyleSheet.create({
     container: { 
@@ -37,11 +268,82 @@ const styles = StyleSheet.create({
         backgroundColor: Colors.background,
         paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0 
     },
-    header: { flexDirection: 'row', justifyContent: 'space-between', padding: 20, alignItems: 'center' },
-    title: { fontSize: 18, fontWeight: 'bold' },
-    form: { padding: 20 },
-    label: { fontSize: 14, color: '#666', marginBottom: 8, marginTop: 15 },
-    input: { backgroundColor: Colors.inputBg, padding: 15, borderRadius: 12, borderWidth: 1, borderColor: Colors.border, fontSize: 16 },
-    saveBtn: { backgroundColor: Colors.primary, padding: 15, borderRadius: 12, alignItems: 'center', marginTop: 30 },
+    header: { 
+        flexDirection: 'row', 
+        justifyContent: 'space-between', 
+        padding: 20, 
+        alignItems: 'center',
+        backgroundColor: Colors.surface,
+        borderBottomWidth: 1,
+        borderBottomColor: Colors.border
+    },
+    title: { fontSize: 18, fontWeight: 'bold', color: Colors.text },
+    
+    form: { padding: 16 },
+
+    // Sections
+    sectionContainer: {
+        backgroundColor: Colors.surface,
+        borderRadius: 16,
+        padding: 16,
+        marginBottom: 20,
+        elevation: 2,
+        shadowColor: "#000",
+        shadowOpacity: 0.05,
+        shadowRadius: 5,
+        shadowOffset: { width: 0, height: 2 }
+    },
+    sectionHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 16,
+        borderBottomWidth: 1,
+        borderBottomColor: '#F3F4F6',
+        paddingBottom: 8
+    },
+    sectionTitle: { fontSize: 16, fontWeight: 'bold', color: Colors.text },
+
+    // Inputs
+    inputGroup: { marginBottom: 15 },
+    label: { fontSize: 13, color: Colors.text, marginBottom: 6, fontWeight: '600' },
+    input: { 
+        backgroundColor: Colors.background, 
+        padding: 12, 
+        borderRadius: 10, 
+        borderWidth: 1, 
+        borderColor: Colors.border, 
+        fontSize: 14,
+        color: Colors.text 
+    },
+    textArea: { height: 80, textAlignVertical: 'top' },
+
+    // Images
+    imageBox: {
+        height: 120,
+        backgroundColor: '#F9FAFB',
+        borderWidth: 1.5,
+        borderColor: '#D1D5DB',
+        borderStyle: 'dashed',
+        borderRadius: 12,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 15,
+        overflow: 'hidden'
+    },
+    placeholder: { alignItems: 'center' },
+    placeholderText: { marginTop: 6, fontSize: 12, color: Colors.primary, fontWeight: '600' },
+    uploadedImg: { width: '100%', height: '100%', resizeMode: 'cover' },
+
+    // Button
+    saveBtn: { 
+        backgroundColor: Colors.primary, 
+        padding: 16, 
+        borderRadius: 30, 
+        alignItems: 'center', 
+        marginBottom: 20,
+        elevation: 4,
+        shadowColor: Colors.primary,
+        shadowOpacity: 0.3
+    },
     saveBtnText: { color: '#FFF', fontSize: 16, fontWeight: 'bold' },
 });
