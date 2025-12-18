@@ -1,8 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
+    ActivityIndicator,
     Alert,
     Image,
     Platform,
@@ -15,9 +17,12 @@ import {
     View
 } from 'react-native';
 
-// ✅ Brand Colors (Purple)
+// ✅ IMPORT API CONFIG
+import { API_BASE_URL } from '../../src/config/ApiConfig';
+
+// Brand Colors (Purple)
 const Colors = { 
-    primary: '#7C3AED', 
+    primary: '#ff3b30ff', 
     background: '#F9FAFB', 
     text: '#1F2937', 
     textLight: '#6B7280',
@@ -28,8 +33,10 @@ const Colors = {
 
 export default function BusinessDetails() {
     const router = useRouter();
+    const [loading, setLoading] = useState(false);
+    const [userPhone, setUserPhone] = useState('');
 
-    // --- State Variables for All Fields ---
+    // --- State Variables ---
     const [companyName, setCompanyName] = useState('');
     const [logo, setLogo] = useState(null);
     const [address, setAddress] = useState('');
@@ -41,6 +48,30 @@ export default function BusinessDetails() {
     const [photo, setPhoto] = useState(null);
     const [selfPhone, setSelfPhone] = useState('');
     const [email, setEmail] = useState('');
+
+    // --- 1. Load Data on Startup ---
+    useEffect(() => {
+        const loadUserData = async () => {
+            try {
+                // Get Phone Number from Session
+                const session = await AsyncStorage.getItem('userSession');
+                if (session) {
+                    const parsed = JSON.parse(session);
+                    setUserPhone(parsed.phone);
+                    
+                    // Optional: Fetch latest data from server to pre-fill
+                    // For now, we use session data or empty strings
+                    setCompanyName(parsed.businessName || '');
+                    setSelfName(parsed.name || '');
+                    setCompanyPhone(parsed.phone || '');
+                    setSelfPhone(parsed.phone || '');
+                }
+            } catch (error) {
+                console.log("Error loading session:", error);
+            }
+        };
+        loadUserData();
+    }, []);
 
     // --- Image Picker ---
     const pickImage = async (setFunction) => {
@@ -56,9 +87,78 @@ export default function BusinessDetails() {
         }
     };
 
-    const handleSave = () => {
-        // Add your API save logic here
-        Alert.alert("Success", "Business details updated!");
+    // --- 2. Save Data to MySQL ---
+    const handleSave = async () => {
+        if (!userPhone) {
+            Alert.alert("Error", "User session not found. Please login again.");
+            return;
+        }
+
+        setLoading(true);
+
+        const formData = new FormData();
+        // Mandatory Key to identify user
+        formData.append('user_phone', userPhone);
+        
+        // Text Fields
+        formData.append('company_name', companyName);
+        formData.append('company_address', address);
+        formData.append('company_phone', companyPhone);
+        formData.append('website', website);
+        formData.append('self_name', selfName);
+        formData.append('designation', designation);
+        formData.append('self_email', email);
+        formData.append('save_format', 'PNG'); // Default
+
+        // Images (Only append if user selected a new one)
+        if (logo && !logo.startsWith('http')) { 
+            let filename = logo.split('/').pop();
+            let match = /\.(\w+)$/.exec(filename);
+            let type = match ? `image/${match[1]}` : `image/jpeg`;
+            formData.append('logo', { uri: logo, name: filename, type });
+        }
+
+        if (photo && !photo.startsWith('http')) {
+            let filename = photo.split('/').pop();
+            let match = /\.(\w+)$/.exec(filename);
+            let type = match ? `image/${match[1]}` : `image/jpeg`;
+            formData.append('photo', { uri: photo, name: filename, type });
+        }
+
+        try {
+            // ✅ CALL PHP API
+            const response = await fetch(`${API_BASE_URL}/save_onboarding.php`, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            });
+
+            const result = await response.json();
+
+            if (result.status === 'success') {
+                Alert.alert("Success", "Profile Updated Successfully!");
+                
+                // Optional: Update local storage with new names
+                const updatedSession = { 
+                    phone: userPhone, 
+                    name: selfName, 
+                    businessName: companyName 
+                };
+                await AsyncStorage.setItem('userSession', JSON.stringify(updatedSession));
+                
+                router.back();
+            } else {
+                Alert.alert("Update Failed", result.message || "Unknown error occurred");
+            }
+
+        } catch (error) {
+            console.error(error);
+            Alert.alert("Network Error", "Could not connect to server.");
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -70,7 +170,7 @@ export default function BusinessDetails() {
                 <TouchableOpacity onPress={() => router.back()}>
                     <Ionicons name="arrow-back" size={24} color={Colors.text} />
                 </TouchableOpacity>
-                <Text style={styles.title}>Business Profile</Text>
+                <Text style={styles.title}>Edit Profile</Text>
                 <View style={{ width: 24 }} /> 
             </View>
 
@@ -125,8 +225,12 @@ export default function BusinessDetails() {
                 </View>
 
                 {/* --- SAVE BUTTON --- */}
-                <TouchableOpacity style={styles.saveBtn} onPress={handleSave}>
-                    <Text style={styles.saveBtnText}>Update Profile</Text>
+                <TouchableOpacity style={styles.saveBtn} onPress={handleSave} disabled={loading}>
+                    {loading ? (
+                        <ActivityIndicator color="#FFF" />
+                    ) : (
+                        <Text style={styles.saveBtnText}>Update Profile</Text>
+                    )}
                 </TouchableOpacity>
 
                 <View style={{ height: 40 }} />

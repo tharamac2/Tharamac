@@ -1,23 +1,24 @@
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as Sharing from 'expo-sharing';
-import { useContext, useRef, useState } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
 import {
-  Alert,
-  Animated,
-  Image,
-  KeyboardAvoidingView,
-  PanResponder,
-  Platform,
-  SafeAreaView,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View
+    Alert,
+    Animated,
+    Image,
+    KeyboardAvoidingView,
+    PanResponder,
+    Platform,
+    SafeAreaView,
+    ScrollView,
+    StatusBar,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View
 } from 'react-native';
 import ViewShot from "react-native-view-shot";
 import { UserContext } from '../../../src/context/UserContext';
@@ -30,18 +31,34 @@ const TEXT_COLORS = [
 
 export default function EditorScreen() {
     const router = useRouter();
-    const { theme, user } = useContext(UserContext);
+    const { theme } = useContext(UserContext);
     const { image } = useLocalSearchParams();
     const viewShotRef = useRef();
 
     // --- STATES ---
+    const [profile, setProfile] = useState(null); // Stores fetched business details
     const [recipientName, setRecipientName] = useState('');
-    const [nameColor, setNameColor] = useState('#E91E63'); // Current selected color
-    const [fontFamily, setFontFamily] = useState('System');
+    const [nameColor, setNameColor] = useState('#E91E63'); 
     const [footerBg, setFooterBg] = useState('rgba(255,255,255,0.95)');
     const [footerTextColor, setFooterTextColor] = useState('#1A237E');
     const [overlayImage, setOverlayImage] = useState(null);
     
+    // --- LOAD BUSINESS PROFILE AUTOMATICALLY ---
+    useEffect(() => {
+        const loadBusinessProfile = async () => {
+            try {
+                const session = await AsyncStorage.getItem('userSession');
+                if (session) {
+                    const data = JSON.parse(session);
+                    setProfile(data);
+                }
+            } catch (error) {
+                console.log("Error loading profile:", error);
+            }
+        };
+        loadBusinessProfile();
+    }, []);
+
     // --- DRAG SETUP ---
     const panText = useRef(new Animated.ValueXY()).current;
     const panPhoto = useRef(new Animated.ValueXY()).current;
@@ -80,8 +97,12 @@ export default function EditorScreen() {
     };
 
     const handleAction = async () => {
-        const uri = await viewShotRef.current.capture();
-        await Sharing.shareAsync(uri);
+        try {
+            const uri = await viewShotRef.current.capture();
+            await Sharing.shareAsync(uri);
+        } catch (e) {
+            console.log(e);
+        }
     };
 
     return (
@@ -136,16 +157,39 @@ export default function EditorScreen() {
                             
                             {recipientName !== '' && (
                                 <Animated.View {...textPanResponder.panHandlers} style={[panText.getLayout(), styles.draggableWrapper, { width: '100%' }]}>
-                                    <Text style={[styles.overlayRecipient, { color: nameColor, fontFamily: fontFamily }]}>{recipientName}</Text>
+                                    <Text style={[styles.overlayRecipient, { color: nameColor }]}>{recipientName}</Text>
                                 </Animated.View>
                             )}
 
+                            {/* --- AUTO-FETCHED BUSINESS FOOTER --- */}
                             <View style={[styles.businessFooter, { backgroundColor: footerBg }]}>
-                                <Text style={[styles.bizName, { color: footerTextColor }]}>{user?.businessName || "Your Business"}</Text>
-                                <View style={styles.bizContactRow}>
-                                    <Text style={[styles.bizContactText, { color: footerTextColor }]}>{user?.phone || "0000000000"}</Text>
+                                <View style={styles.footerContent}>
+                                    {/* Left: Logo (if available) */}
+                                    {/* Note: Ensure your login/profile save logic stores 'logo' in AsyncStorage */}
+                                    {/* Placeholder icon if no logo */}
+                                    <View style={styles.logoContainer}>
+                                         <Ionicons name="business" size={24} color={footerTextColor} />
+                                    </View>
+
+                                    {/* Middle: Business Details */}
+                                    <View style={styles.textContainer}>
+                                        <Text style={[styles.bizName, { color: footerTextColor }]} numberOfLines={1}>
+                                            {profile?.businessName || profile?.company_name || "Your Business Name"}
+                                        </Text>
+                                        
+                                        <Text style={[styles.bizContactText, { color: footerTextColor }]} numberOfLines={1}>
+                                            {profile?.phone || profile?.company_phone || "Contact Number"}
+                                        </Text>
+                                        
+                                        {(profile?.email || profile?.website) && (
+                                            <Text style={[styles.bizContactText, { color: footerTextColor, fontSize: 9 }]} numberOfLines={1}>
+                                                {profile?.website || profile?.email || "www.yourwebsite.com"}
+                                            </Text>
+                                        )}
+                                    </View>
                                 </View>
                             </View>
+
                         </View>
                     </ViewShot>
 
@@ -156,9 +200,9 @@ export default function EditorScreen() {
                                 <Ionicons name="image-outline" size={20} color={theme.primary} />
                                 <Text style={styles.btnLabel}>Add Photo</Text>
                             </TouchableOpacity>
-                            <TouchableOpacity style={styles.btn} onPress={() => setFooterBg('#F5F5F5')}>
+                            <TouchableOpacity style={styles.btn} onPress={() => setFooterBg(footerBg === '#F5F5F5' ? 'rgba(255,255,255,0.95)' : '#F5F5F5')}>
                                 <Ionicons name="color-fill-outline" size={20} color={theme.primary} />
-                                <Text style={styles.btnLabel}>Background</Text>
+                                <Text style={styles.btnLabel}>Toggle Footer</Text>
                             </TouchableOpacity>
                         </View>
                         
@@ -200,14 +244,41 @@ const styles = StyleSheet.create({
     input: { height: 50, borderRadius: 12, borderWidth: 1, paddingHorizontal: 15, marginBottom: 15 },
     colorPickerRow: { flexDirection: 'row', paddingVertical: 5 },
     colorOption: { width: 34, height: 34, borderRadius: 17, marginRight: 12, borderWidth: 2, justifyContent: 'center', alignItems: 'center' },
-    canvas: { width: '100%', aspectRatio: 1, borderRadius: 12, overflow: 'hidden', backgroundColor: '#EEE' },
+    
+    // Canvas & Footer
+    canvas: { width: '100%', aspectRatio: 1, borderRadius: 12, overflow: 'hidden', backgroundColor: '#EEE', position: 'relative' },
     image: { width: '100%', height: '100%' },
     draggableWrapper: { position: 'absolute', zIndex: 100 },
     userOverlay: { width: 80, height: 80, borderRadius: 40, borderWidth: 2, borderColor: '#FFF' },
     overlayRecipient: { fontSize: 28, fontWeight: 'bold', textAlign: 'center' },
-    businessFooter: { position: 'absolute', bottom: 0, width: '100%', paddingVertical: 10, alignItems: 'center' },
-    bizName: { fontSize: 13, fontWeight: 'bold' },
-    bizContactText: { fontSize: 10, marginTop: 4 },
+    
+    businessFooter: { 
+        position: 'absolute', 
+        bottom: 0, 
+        width: '100%', 
+        paddingVertical: 8, 
+        paddingHorizontal: 15,
+        borderTopWidth: 1,
+        borderColor: 'rgba(0,0,0,0.05)'
+    },
+    footerContent: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center'
+    },
+    logoContainer: {
+        marginRight: 10,
+        justifyContent: 'center',
+        alignItems: 'center'
+    },
+    textContainer: {
+        justifyContent: 'center',
+        alignItems: 'flex-start'
+    },
+    bizName: { fontSize: 14, fontWeight: 'bold', textTransform: 'uppercase' },
+    bizContactText: { fontSize: 10, marginTop: 2, fontWeight: '500' },
+
+    // Buttons
     buttonSection: { marginTop: 25, paddingBottom: 30 },
     row: { flexDirection: 'row', justifyContent: 'space-between' },
     btn: { flex: 0.48, height: 48, borderRadius: 10, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#DDD' },
