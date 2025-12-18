@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Slider from '@react-native-community/slider';
 import * as ImagePicker from 'expo-image-picker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as Sharing from 'expo-sharing';
@@ -28,7 +29,7 @@ import { API_BASE_URL } from '../../../src/config/ApiConfig';
 
 const TEXT_COLORS = [
     '#E91E63', '#1A237E', '#000000', '#4CAF50', '#FF9800', 
-    '#9C27B0', '#F44336', '#2196F3', '#009688', '#795548'
+    '#9C27B0', '#F44336', '#2196F3', '#009688', '#795548', '#FFFFFF'
 ];
 
 export default function EditorScreen() {
@@ -41,11 +42,13 @@ export default function EditorScreen() {
     const [profile, setProfile] = useState(null);
     const [recipientName, setRecipientName] = useState('');
     const [nameColor, setNameColor] = useState('#E91E63'); 
+    const [fontFamily, setFontFamily] = useState('System');
+    const [textSize, setTextSize] = useState(28);
     const [footerBg, setFooterBg] = useState('rgba(255,255,255,0.95)');
     const [footerTextColor, setFooterTextColor] = useState('#1A237E');
     const [overlayImage, setOverlayImage] = useState(null);
     
-    // --- 1. AUTO-FETCH DATA ---
+   // --- 1. AUTO-FETCH DATA ---
     useEffect(() => {
         const fetchProfileFromDB = async () => {
             try {
@@ -91,13 +94,37 @@ export default function EditorScreen() {
     const textPanResponder = useRef(createPanResponder(panText)).current;
     const photoPanResponder = useRef(createPanResponder(panPhoto)).current;
 
+    // --- HANDLERS ---
+    const handleEditStyle = () => {
+        const fonts = Platform.OS === 'ios' ? ['System', 'Georgia', 'Courier', 'Times New Roman'] : ['normal', 'monospace', 'serif', 'sans-serif-light'];
+        const next = fonts[(fonts.indexOf(fontFamily) + 1) % fonts.length];
+        setFontFamily(next);
+    };
+
+    const handleBackgroundChange = () => {
+        const bgConfigs = [
+            { bg: 'rgba(255,255,255,0.95)', text: '#1A237E' }, // White
+            { bg: '#1A237E', text: '#FFFFFF' },               // Navy Blue
+            { bg: '#000000', text: '#FFFFFF' },               // Black
+            { bg: '#F5F5F5', text: '#333333' },               // Light Grey
+            { bg: '#FFD700', text: '#000000' },               // Gold
+            { bg: '#008080', text: '#FFFFFF' },               // Teal
+            { bg: '#E91E63', text: '#FFFFFF' },               // Pink
+            { bg: '#4CAF50', text: '#FFFFFF' }                // Green
+        ];
+        const currentIndex = bgConfigs.findIndex(c => c.bg === footerBg);
+        const next = bgConfigs[(currentIndex + 1) % bgConfigs.length];
+        setFooterBg(next.bg);
+        setFooterTextColor(next.text);
+    };
+
     const handleAddPhoto = async () => {
         let result = await ImagePicker.launchImageLibraryAsync({ allowsEditing: true, aspect: [1, 1], quality: 1 });
         if (!result.canceled) setOverlayImage(result.assets[0].uri);
     };
 
     const confirmDelete = (type) => {
-        Alert.alert("Delete", `Remove this ${type}?`, [
+        Alert.alert("Delete Item", `Are you sure you want to remove this ${type}?`, [
             { text: "Cancel", style: "cancel" },
             { text: "Delete", style: "destructive", onPress: () => {
                 if(type === 'text') { setRecipientName(''); panText.setValue({x:0, y:0}); }
@@ -107,10 +134,8 @@ export default function EditorScreen() {
     };
 
     const handleAction = async () => {
-        try {
-            const uri = await viewShotRef.current.capture();
-            await Sharing.shareAsync(uri);
-        } catch (e) { console.log(e); }
+        const uri = await viewShotRef.current.capture();
+        await Sharing.shareAsync(uri);
     };
 
     return (
@@ -118,33 +143,55 @@ export default function EditorScreen() {
             <StatusBar barStyle={theme.dark ? "light-content" : "dark-content"} />
             <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
                 
+                {/* Header */}
                 <View style={[styles.header, { paddingTop: Platform.OS === 'android' ? 45 : 10 }]}>
                     <TouchableOpacity onPress={() => router.back()}><Ionicons name="close" size={30} color={theme.text} /></TouchableOpacity>
                     <Text style={[styles.title, { color: theme.text }]}>Editor</Text>
                     <View style={{ width: 30 }} />
                 </View>
 
-                <ScrollView contentContainerStyle={styles.scrollContent}>
-                    {/* INPUT SECTION */}
+                <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+                    
+                    {/* Tool Section: Old Design Style */}
                     <View style={styles.topSection}>
-                        <Text style={[styles.label, { color: theme.textLight }]}>Recipient Name:</Text>
+                        <View style={styles.labelRow}>
+                            <Text style={[styles.label, { color: theme.textLight }]}>Recipient Name:</Text>
+                            <TouchableOpacity onPress={handleEditStyle} style={styles.fontBtn}>
+                                <Ionicons name="text" size={16} color={theme.primary} />
+                                <Text style={{ color: theme.primary, fontWeight: '700', marginLeft: 5 }}>Change Font</Text>
+                            </TouchableOpacity>
+                        </View>
                         <TextInput
                             style={[styles.input, { backgroundColor: theme.inputBg, color: theme.text, borderColor: theme.border }]}
                             placeholder="Type name here..."
                             value={recipientName}
                             onChangeText={setRecipientName}
                         />
+
+                        {/* Color Picker */}
                         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.colorPickerRow}>
                             {TEXT_COLORS.map((color) => (
                                 <TouchableOpacity 
                                     key={color} 
                                     onPress={() => setNameColor(color)}
-                                    style={[styles.colorOption, { backgroundColor: color, borderColor: nameColor === color ? '#000' : 'transparent' }]}
-                                >
-                                    {nameColor === color && <Ionicons name="checkmark" size={16} color="white" />}
-                                </TouchableOpacity>
+                                    style={[styles.colorCircle, { backgroundColor: color, borderColor: nameColor === color ? theme.primary : '#DDD', borderWidth: nameColor === color ? 3 : 1 }]}
+                                />
                             ))}
                         </ScrollView>
+
+                        {/* Text Size Slider */}
+                        <View style={styles.sliderRow}>
+                            <Ionicons name="resize" size={20} color={theme.textLight} />
+                            <Slider
+                                style={{ flex: 1, height: 40 }}
+                                minimumValue={18}
+                                maximumValue={70}
+                                value={textSize}
+                                onValueChange={setTextSize}
+                                minimumTrackTintColor={theme.primary}
+                                maximumTrackTintColor="#DDD"
+                            />
+                        </View>
                     </View>
 
                     {/* CANVAS AREA */}
@@ -217,38 +264,47 @@ export default function EditorScreen() {
                         </View>
                     </ViewShot>
 
-                    {/* BUTTONS */}
+                    {/* Bottom Buttons Section */}
                     <View style={styles.buttonSection}>
                         <View style={styles.row}>
                             <TouchableOpacity style={styles.btn} onPress={handleAddPhoto}>
                                 <Ionicons name="image-outline" size={20} color={theme.primary} />
                                 <Text style={styles.btnLabel}>Add Photo</Text>
                             </TouchableOpacity>
-                            <TouchableOpacity style={styles.btn} onPress={() => setFooterBg(footerBg === '#F5F5F5' ? 'rgba(255,255,255,0.95)' : '#F5F5F5')}>
+                            <TouchableOpacity style={styles.btn} onPress={handleBackgroundChange}>
                                 <Ionicons name="color-fill-outline" size={20} color={theme.primary} />
-                                <Text style={styles.btnLabel}>Toggle Footer</Text>
+                                <Text style={styles.btnLabel}>Background</Text>
                             </TouchableOpacity>
                         </View>
                         
                         <View style={[styles.row, { marginTop: 12 }]}>
-                            <TouchableOpacity style={[styles.btn, styles.whatsappBtn]} onPress={handleAction}>
+                            <TouchableOpacity style={[styles.btn, styles.waBtn]} onPress={handleAction}>
                                 <Ionicons name="logo-whatsapp" size={20} color="#FFF" />
-                                <Text style={styles.whiteBtnText}>WhatsApp</Text>
+                                <Text style={styles.whiteText}>WhatsApp</Text>
                             </TouchableOpacity>
                             <TouchableOpacity style={[styles.btn, { backgroundColor: theme.primary }]} onPress={handleAction}>
                                 <Ionicons name="share-social-outline" size={20} color="#FFF" />
-                                <Text style={styles.whiteBtnText}>Share</Text>
+                                <Text style={styles.whiteText}>Share</Text>
                             </TouchableOpacity>
                         </View>
 
+                        {/* Delete Logic: Disabled if items are missing */}
                         <View style={[styles.row, { marginTop: 12 }]}>
-                            <TouchableOpacity style={styles.deleteBtn} onPress={() => confirmDelete('text')}>
-                                <Ionicons name="trash-outline" size={18} color="#FF5252" />
-                                <Text style={styles.deleteText}>Delete Name</Text>
+                            <TouchableOpacity 
+                                style={[styles.delBtn, { borderColor: recipientName ? '#FF5252' : '#EEE' }]} 
+                                onPress={() => confirmDelete('text')}
+                                disabled={!recipientName}
+                            >
+                                <Ionicons name="trash-outline" size={18} color={recipientName ? "#FF5252" : "#CCC"} />
+                                <Text style={[styles.delText, { color: recipientName ? "#FF5252" : "#CCC" }]}>Delete Name</Text>
                             </TouchableOpacity>
-                            <TouchableOpacity style={styles.deleteBtn} onPress={() => confirmDelete('photo')}>
-                                <Ionicons name="trash-outline" size={18} color="#FF5252" />
-                                <Text style={styles.deleteText}>Delete Photo</Text>
+                            <TouchableOpacity 
+                                style={[styles.delBtn, { borderColor: overlayImage ? '#FF5252' : '#EEE' }]} 
+                                onPress={() => confirmDelete('photo')}
+                                disabled={!overlayImage}
+                            >
+                                <Ionicons name="trash-outline" size={18} color={overlayImage ? "#FF5252" : "#CCC"} />
+                                <Text style={[styles.delText, { color: overlayImage ? "#FF5252" : "#CCC" }]}>Delete Photo</Text>
                             </TouchableOpacity>
                         </View>
                     </View>
@@ -264,60 +320,29 @@ const styles = StyleSheet.create({
     title: { fontSize: 20, fontWeight: 'bold' },
     scrollContent: { padding: 20 },
     topSection: { marginBottom: 20 },
-    label: { fontSize: 14, fontWeight: '700', marginBottom: 8 },
-    input: { height: 50, borderRadius: 12, borderWidth: 1, paddingHorizontal: 15, marginBottom: 15 },
-    colorPickerRow: { flexDirection: 'row', paddingVertical: 5 },
-    colorOption: { width: 34, height: 34, borderRadius: 17, marginRight: 12, borderWidth: 2, justifyContent: 'center', alignItems: 'center' },
-    
-    // Canvas
-    canvas: { width: '100%', aspectRatio: 1, borderRadius: 12, overflow: 'hidden', backgroundColor: '#EEE', position: 'relative' },
+    labelRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
+    label: { fontSize: 14, fontWeight: '700' },
+    fontBtn: { flexDirection: 'row', alignItems: 'center' },
+    input: { height: 50, borderRadius: 12, borderWidth: 1, paddingHorizontal: 15 },
+    colorPickerRow: { marginTop: 15, flexDirection: 'row' },
+    colorCircle: { width: 34, height: 34, borderRadius: 17, marginRight: 12 },
+    sliderRow: { flexDirection: 'row', alignItems: 'center', marginTop: 10 },
+    canvas: { width: '100%', aspectRatio: 1, borderRadius: 12, overflow: 'hidden', backgroundColor: '#EEE' },
     image: { width: '100%', height: '100%' },
     draggableWrapper: { position: 'absolute', zIndex: 100 },
     userOverlay: { width: 80, height: 80, borderRadius: 40, borderWidth: 2, borderColor: '#FFF' },
-    overlayRecipient: { fontSize: 28, fontWeight: 'bold', textAlign: 'center' },
-    
-    // Footer Styles (Optimized for space)
-    businessFooter: { 
-        position: 'absolute', 
-        bottom: 0, 
-        width: '100%', 
-        paddingVertical: 8, 
-        paddingHorizontal: 12,
-        borderTopWidth: 1,
-        borderColor: 'rgba(0,0,0,0.05)'
-    },
-    footerRow: { 
-        flexDirection: 'row', 
-        alignItems: 'center',
-        justifyContent: 'flex-start'
-    },
-    logoContainer: { 
-        width: 50, 
-        height: 50, 
-        marginRight: 12, 
-        justifyContent: 'center', 
-        alignItems: 'center',
-        backgroundColor: '#F0F0F0',
-        borderRadius: 6,
-        overflow: 'hidden'
-    },
-    logoImage: { width: '100%', height: '100%' },
-    detailsContainer: { 
-        flex: 1, 
-        justifyContent: 'center' 
-    },
-    bizName: { fontSize: 13, fontWeight: 'bold', textTransform: 'uppercase', marginBottom: 2 },
-    bizAddress: { fontSize: 9, marginBottom: 2, opacity: 0.8 },
-    contactRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center' },
-    contactText: { fontSize: 9, fontWeight: '600', marginRight: 8 },
-
-    // Buttons
-    buttonSection: { marginTop: 25, paddingBottom: 30 },
+    overlayRecipient: { fontWeight: 'bold', textAlign: 'center' },
+    businessFooter: { position: 'absolute', bottom: 0, width: '100%', paddingVertical: 10 },
+    footerContent: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center' },
+    textContainer: { alignItems: 'center' },
+    bizName: { fontSize: 13, fontWeight: 'bold' },
+    bizContactText: { fontSize: 10 },
+    buttonSection: { marginTop: 25, paddingBottom: 40 },
     row: { flexDirection: 'row', justifyContent: 'space-between' },
-    btn: { flex: 0.48, height: 48, borderRadius: 10, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#DDD' },
-    btnLabel: { marginLeft: 8, fontWeight: '600' },
-    whatsappBtn: { backgroundColor: '#25D366', borderColor: '#25D366' },
-    whiteBtnText: { color: '#FFF', marginLeft: 8, fontWeight: 'bold' },
-    deleteBtn: { flex: 0.48, height: 40, borderRadius: 10, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#FF5252' },
-    deleteText: { color: '#FF5252', marginLeft: 6, fontWeight: '600', fontSize: 13 }
+    btn: { flex: 0.48, height: 48, borderRadius: 12, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#DDD' },
+    btnLabel: { marginLeft: 8, fontWeight: 'bold' },
+    waBtn: { backgroundColor: '#25D366', borderColor: '#25D366' },
+    whiteText: { color: '#FFF', fontWeight: 'bold', marginLeft: 8 },
+    delBtn: { flex: 0.48, height: 45, borderRadius: 12, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', borderWidth: 1 },
+    delText: { marginLeft: 6, fontWeight: 'bold', fontSize: 13 }
 });
