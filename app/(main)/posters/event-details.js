@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import * as FileSystem from 'expo-file-system';
+import { Asset } from 'expo-asset';
 import * as MediaLibrary from 'expo-media-library';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as Sharing from 'expo-sharing';
@@ -32,48 +32,38 @@ export default function EventDetailsScreen() {
   const params = useLocalSearchParams();
   const { eventName, date } = params;
 
-const handleEdit = (image) => {
-  // image is a local require(...) – convert it to a URI
-  const asset = Image.resolveAssetSource(image);
+  // EDIT: open editor with this template
+  const handleEdit = (image) => {
+    const asset = Image.resolveAssetSource(image);
+    router.push({
+      pathname: '/(main)/editor',
+      params: { image: asset.uri }, // URI string for editor
+    });
+  };
 
-  router.push({
-    pathname: '/(main)/editor',
-    params: { image: asset.uri },   // pass URI string to editor
-  });
-};
-
+  // DOWNLOAD: save local bundled image to gallery
 const handleDownload = async (image) => {
   try {
-    const { status } = await MediaLibrary.requestPermissionsAsync();
+    const { status } = await MediaLibrary.requestPermissionsAsync();  // ✅ no options
     if (status !== 'granted') {
       Alert.alert('Permission Denied', 'We need access to your gallery to save images.');
       return;
     }
 
-    // image is require(...) – turn it into an Asset and download it
-    const asset = await Asset.fromModule(image).downloadAsync(); // ensures a local file
-    const sourceUri = asset.localUri || asset.uri;
-
-    const fileName = (sourceUri.split('/').pop() || 'download.jpg').split('?')[0];
-    const destUri = FileSystem.documentDirectory + fileName;
-
-    // Copy into app documents
-    await FileSystem.copyAsync({
-      from: sourceUri,
-      to: destUri,
-    });
-
-    // Save to gallery
-    await MediaLibrary.createAssetAsync(destUri);
-
+    const asset = await Asset.fromModule(image).downloadAsync();
+    const localUri = asset.localUri || asset.uri;
+    await MediaLibrary.createAssetAsync(localUri);
     Alert.alert('Saved!', 'Image saved to your Gallery successfully.');
   } catch (error) {
     console.error('Download Error:', error);
-    Alert.alert('Error', 'Could not save image. Try again.');
+    Alert.alert('Error', `Could not save image. Try again.\n${String(error)}`);
   }
 };
 
 
+
+
+  // SHARE: share local bundled image
   const handleShare = async (image) => {
     try {
       if (!(await Sharing.isAvailableAsync())) {
@@ -81,14 +71,13 @@ const handleDownload = async (image) => {
         return;
       }
 
-      const asset = Image.resolveAssetSource(image);
-      const fileUri = FileSystem.documentDirectory + (asset.name || 'share') + '.jpg';
+      const asset = await Asset.fromModule(image).downloadAsync();
+      const sourceUri = asset.localUri || asset.uri;
 
-      const { uri } = await FileSystem.downloadAsync(asset.uri, fileUri);
-      await Sharing.shareAsync(uri);
+      await Sharing.shareAsync(sourceUri);
     } catch (error) {
       console.error('Share Error:', error);
-      Alert.alert('Error', 'Could not share image.');
+      Alert.alert('Error', `Could not share image.\n${String(error)}`);
     }
   };
 
