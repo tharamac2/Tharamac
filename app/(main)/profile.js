@@ -1,7 +1,8 @@
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
-import { useFocusEffect, useRouter } from 'expo-router'; // ✅ Added useFocusEffect
-import { useCallback, useContext } from 'react'; // ✅ Added useCallback
+import { useFocusEffect, useRouter } from 'expo-router';
+import { useCallback, useContext } from 'react';
 import {
     Alert,
     Image,
@@ -13,26 +14,24 @@ import {
     TouchableOpacity,
     View
 } from 'react-native';
-// ✅ Import AsyncStorage
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Import the Context
 import { UserContext } from '../../src/context/UserContext';
 
+// ✅ REMOVED "Business Details" from this list
 const MENU_ITEMS = [
     { id: 1, title: 'Edit Profile', icon: 'person-outline', type: 'Ionicons', route: '/(main)/edit-profile' },
     { id: 2, title: 'My Subscription', icon: 'crown', type: 'MaterialCommunityIcons', isPremium: true, route: '/(main)/subscription' },
-    { id: 3, title: 'Business Details', icon: 'briefcase-outline', type: 'Ionicons', route: '/(main)/business-details' },
+    // { id: 3, title: 'Business Details', ... } <-- REMOVED
     { id: 4, title: 'App Settings', icon: 'settings-outline', type: 'Ionicons', route: '/(main)/settings' },
     { id: 5, title: 'Help & Support', icon: 'headset-outline', type: 'Ionicons', route: '/(main)/help' },
 ];
 
 export default function ProfileScreen() {
     const router = useRouter();
-    // Get live data from Context
     const { userData, setUserData, theme } = useContext(UserContext);
 
-    // ✅ UPDATED: Fetch data from AsyncStorage when screen comes into focus
+    // Fetch data when screen focuses
     useFocusEffect(
         useCallback(() => {
             const loadProfileData = async () => {
@@ -40,7 +39,6 @@ export default function ProfileScreen() {
                     const jsonValue = await AsyncStorage.getItem('userSession');
                     if (jsonValue != null) {
                         const savedUser = JSON.parse(jsonValue);
-                        // Update the Context with the saved data
                         setUserData(prev => ({
                             ...prev,
                             name: savedUser.name || prev.name,
@@ -57,8 +55,6 @@ export default function ProfileScreen() {
     );
 
     const handleLogout = async () => {
-        // Optional: Clear session on logout
-        // await AsyncStorage.removeItem('userSession'); 
         router.replace('/(auth)/login');
     };
 
@@ -79,7 +75,6 @@ export default function ProfileScreen() {
         }
     };
 
-    // Dynamic Styles based on Theme
     const dynamicStyles = {
         container: { backgroundColor: theme.background },
         headerBackground: { backgroundColor: theme.headerBg || theme.primary },
@@ -104,7 +99,6 @@ export default function ProfileScreen() {
                     </TouchableOpacity>
                     <Text style={styles.headerTitle}>Profile</Text>
                     
-                    {/* Settings Button Navigation */}
                     <TouchableOpacity 
                         style={styles.iconBtn} 
                         onPress={() => router.push('/(main)/settings')}
@@ -132,7 +126,6 @@ export default function ProfileScreen() {
                         <Text style={styles.premiumText}>Premium Member</Text>
                     </View>
 
-                    {/* ✅ UPDATED: Display Name and Business from Context (which is updated by AsyncStorage) */}
                     <Text style={[styles.userName, dynamicStyles.text]}>{userData.name || 'User'}</Text>
                     <Text style={[styles.userBio, dynamicStyles.textLight]}>{userData.businessName || 'Business Name'}</Text>
 
