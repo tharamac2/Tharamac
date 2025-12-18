@@ -101,10 +101,12 @@ export default function RegisterScreen() {
                 }
 
                 setShowWelcome(true);
+
                 setTimeout(() => {
-                    setShowWelcome(false);
-                    router.replace('/(main)/home'); 
+                setShowWelcome(false);
+                router.replace('/(auth)/onboarding');  // go to onboarding instead of home
                 }, 2000);
+
             } else {
                 Alert.alert('Registration Failed', response.message || 'Please try again.');
             }

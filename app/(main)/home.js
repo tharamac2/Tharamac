@@ -33,7 +33,7 @@ const { width, height } = Dimensions.get('window');
 
 // --- 1. STATIC COLORS ---
 const Colors = {
-    primary: '#FF3B30',       // Red
+    primary: '#ff3b30ff',       // Red
     secondary: '#000000',     // Black
     white: '#FFFFFF',
     cardDark: '#1C1C1E',      
