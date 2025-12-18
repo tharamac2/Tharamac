@@ -23,7 +23,9 @@ import {
 import ViewShot from "react-native-view-shot";
 import { UserContext } from '../../../src/context/UserContext';
 
-// List of colors for the text picker
+// ✅ IMPORT API CONFIG
+import { API_BASE_URL } from '../../../src/config/ApiConfig';
+
 const TEXT_COLORS = [
     '#E91E63', '#1A237E', '#000000', '#4CAF50', '#FF9800', 
     '#9C27B0', '#F44336', '#2196F3', '#009688', '#795548'
@@ -36,27 +38,40 @@ export default function EditorScreen() {
     const viewShotRef = useRef();
 
     // --- STATES ---
-    const [profile, setProfile] = useState(null); // Stores fetched business details
+    const [profile, setProfile] = useState(null);
     const [recipientName, setRecipientName] = useState('');
     const [nameColor, setNameColor] = useState('#E91E63'); 
     const [footerBg, setFooterBg] = useState('rgba(255,255,255,0.95)');
     const [footerTextColor, setFooterTextColor] = useState('#1A237E');
     const [overlayImage, setOverlayImage] = useState(null);
     
-    // --- LOAD BUSINESS PROFILE AUTOMATICALLY ---
+    // --- 1. AUTO-FETCH DATA ---
     useEffect(() => {
-        const loadBusinessProfile = async () => {
+        const fetchProfileFromDB = async () => {
             try {
                 const session = await AsyncStorage.getItem('userSession');
                 if (session) {
-                    const data = JSON.parse(session);
-                    setProfile(data);
+                    const sessionData = JSON.parse(session);
+                    const userPhone = sessionData.phone; 
+
+                    console.log("Fetching profile for:", userPhone);
+
+                    const response = await fetch(`${API_BASE_URL}/get_profile.php?phone=${userPhone}`);
+                    const json = await response.json();
+
+                    console.log("API Response:", json); // ✅ CHECK YOUR CONSOLE FOR THIS
+
+                    if (json.status === 'success') {
+                        setProfile(json.data);
+                    } else {
+                        Alert.alert("Notice", "Profile not found. Please set up your business profile.");
+                    }
                 }
             } catch (error) {
-                console.log("Error loading profile:", error);
+                console.error("Error fetching profile:", error);
             }
         };
-        loadBusinessProfile();
+        fetchProfileFromDB();
     }, []);
 
     // --- DRAG SETUP ---
@@ -76,13 +91,8 @@ export default function EditorScreen() {
     const textPanResponder = useRef(createPanResponder(panText)).current;
     const photoPanResponder = useRef(createPanResponder(panPhoto)).current;
 
-    // --- HANDLERS ---
     const handleAddPhoto = async () => {
-        let result = await ImagePicker.launchImageLibraryAsync({
-            allowsEditing: true,
-            aspect: [1, 1],
-            quality: 1,
-        });
+        let result = await ImagePicker.launchImageLibraryAsync({ allowsEditing: true, aspect: [1, 1], quality: 1 });
         if (!result.canceled) setOverlayImage(result.assets[0].uri);
     };
 
@@ -100,9 +110,7 @@ export default function EditorScreen() {
         try {
             const uri = await viewShotRef.current.capture();
             await Sharing.shareAsync(uri);
-        } catch (e) {
-            console.log(e);
-        }
+        } catch (e) { console.log(e); }
     };
 
     return (
@@ -117,7 +125,7 @@ export default function EditorScreen() {
                 </View>
 
                 <ScrollView contentContainerStyle={styles.scrollContent}>
-                    {/* 1. INPUT & COLOR PICKER */}
+                    {/* INPUT SECTION */}
                     <View style={styles.topSection}>
                         <Text style={[styles.label, { color: theme.textLight }]}>Recipient Name:</Text>
                         <TextInput
@@ -126,17 +134,12 @@ export default function EditorScreen() {
                             value={recipientName}
                             onChangeText={setRecipientName}
                         />
-                        
-                        {/* COLOR SELECTION ROW */}
                         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.colorPickerRow}>
                             {TEXT_COLORS.map((color) => (
                                 <TouchableOpacity 
                                     key={color} 
                                     onPress={() => setNameColor(color)}
-                                    style={[
-                                        styles.colorOption, 
-                                        { backgroundColor: color, borderColor: nameColor === color ? '#000' : 'transparent' }
-                                    ]}
+                                    style={[styles.colorOption, { backgroundColor: color, borderColor: nameColor === color ? '#000' : 'transparent' }]}
                                 >
                                     {nameColor === color && <Ionicons name="checkmark" size={16} color="white" />}
                                 </TouchableOpacity>
@@ -144,7 +147,7 @@ export default function EditorScreen() {
                         </ScrollView>
                     </View>
 
-                    {/* 2. CENTERED CANVAS */}
+                    {/* CANVAS AREA */}
                     <ViewShot ref={viewShotRef} options={{ format: "jpg", quality: 1.0 }}>
                         <View style={styles.canvas}>
                             {image && <Image source={{ uri: image }} style={styles.image} />}
@@ -161,39 +164,60 @@ export default function EditorScreen() {
                                 </Animated.View>
                             )}
 
-                            {/* --- AUTO-FETCHED BUSINESS FOOTER --- */}
+                            {/* --- BUSINESS FOOTER --- */}
                             <View style={[styles.businessFooter, { backgroundColor: footerBg }]}>
-                                <View style={styles.footerContent}>
-                                    {/* Left: Logo (if available) */}
-                                    {/* Note: Ensure your login/profile save logic stores 'logo' in AsyncStorage */}
-                                    {/* Placeholder icon if no logo */}
+                                <View style={styles.footerRow}>
+                                    
+                                    {/* 1. LOGO */}
                                     <View style={styles.logoContainer}>
-                                         <Ionicons name="business" size={24} color={footerTextColor} />
-                                    </View>
-
-                                    {/* Middle: Business Details */}
-                                    <View style={styles.textContainer}>
-                                        <Text style={[styles.bizName, { color: footerTextColor }]} numberOfLines={1}>
-                                            {profile?.businessName || profile?.company_name || "Your Business Name"}
-                                        </Text>
-                                        
-                                        <Text style={[styles.bizContactText, { color: footerTextColor }]} numberOfLines={1}>
-                                            {profile?.phone || profile?.company_phone || "Contact Number"}
-                                        </Text>
-                                        
-                                        {(profile?.email || profile?.website) && (
-                                            <Text style={[styles.bizContactText, { color: footerTextColor, fontSize: 9 }]} numberOfLines={1}>
-                                                {profile?.website || profile?.email || "www.yourwebsite.com"}
-                                            </Text>
+                                        {profile?.company_logo ? (
+                                            <Image source={{ uri: profile.company_logo }} style={styles.logoImage} resizeMode="contain" />
+                                        ) : (
+                                            <Ionicons name="business" size={24} color={footerTextColor} />
                                         )}
                                     </View>
+
+                                    {/* 2. DETAILS (Stacked) */}
+                                    <View style={styles.detailsContainer}>
+                                        
+                                        {/* Company Name */}
+                                        <Text style={[styles.bizName, { color: footerTextColor }]} numberOfLines={1}>
+                                            {profile?.company_name || "Company Name"}
+                                        </Text>
+
+                                        {/* Address - Force show 'Address not set' if null to debug */}
+                                        <Text style={[styles.bizAddress, { color: footerTextColor }]} numberOfLines={2}>
+                                            {profile?.company_address || "Address not set"}
+                                        </Text>
+
+                                        {/* Contact Row: Phone | Website */}
+                                        <View style={styles.contactRow}>
+                                            <Text style={[styles.contactText, { color: footerTextColor }]}>
+                                                📞 {profile?.company_phone || profile?.phone || "No Phone"}
+                                            </Text>
+                                            
+                                            {/* Show website if exists */}
+                                            {profile?.website ? (
+                                                <Text style={[styles.contactText, { color: footerTextColor, marginLeft: 8 }]}>
+                                                    🌐 {profile.website}
+                                                </Text>
+                                            ) : null}
+                                        </View>
+                                        
+                                        {/* Email */}
+                                        {profile?.self_email ? (
+                                            <Text style={[styles.contactText, { color: footerTextColor, marginTop: 2 }]}>
+                                                ✉️ {profile.self_email}
+                                            </Text>
+                                        ) : null}
+                                    </View>
+
                                 </View>
                             </View>
-
                         </View>
                     </ViewShot>
 
-                    {/* 3. BUTTONS */}
+                    {/* BUTTONS */}
                     <View style={styles.buttonSection}>
                         <View style={styles.row}>
                             <TouchableOpacity style={styles.btn} onPress={handleAddPhoto}>
@@ -245,38 +269,47 @@ const styles = StyleSheet.create({
     colorPickerRow: { flexDirection: 'row', paddingVertical: 5 },
     colorOption: { width: 34, height: 34, borderRadius: 17, marginRight: 12, borderWidth: 2, justifyContent: 'center', alignItems: 'center' },
     
-    // Canvas & Footer
+    // Canvas
     canvas: { width: '100%', aspectRatio: 1, borderRadius: 12, overflow: 'hidden', backgroundColor: '#EEE', position: 'relative' },
     image: { width: '100%', height: '100%' },
     draggableWrapper: { position: 'absolute', zIndex: 100 },
     userOverlay: { width: 80, height: 80, borderRadius: 40, borderWidth: 2, borderColor: '#FFF' },
     overlayRecipient: { fontSize: 28, fontWeight: 'bold', textAlign: 'center' },
     
+    // Footer Styles (Optimized for space)
     businessFooter: { 
         position: 'absolute', 
         bottom: 0, 
         width: '100%', 
         paddingVertical: 8, 
-        paddingHorizontal: 15,
+        paddingHorizontal: 12,
         borderTopWidth: 1,
         borderColor: 'rgba(0,0,0,0.05)'
     },
-    footerContent: {
-        flexDirection: 'row',
+    footerRow: { 
+        flexDirection: 'row', 
         alignItems: 'center',
-        justifyContent: 'center'
+        justifyContent: 'flex-start'
     },
-    logoContainer: {
-        marginRight: 10,
-        justifyContent: 'center',
-        alignItems: 'center'
+    logoContainer: { 
+        width: 50, 
+        height: 50, 
+        marginRight: 12, 
+        justifyContent: 'center', 
+        alignItems: 'center',
+        backgroundColor: '#F0F0F0',
+        borderRadius: 6,
+        overflow: 'hidden'
     },
-    textContainer: {
-        justifyContent: 'center',
-        alignItems: 'flex-start'
+    logoImage: { width: '100%', height: '100%' },
+    detailsContainer: { 
+        flex: 1, 
+        justifyContent: 'center' 
     },
-    bizName: { fontSize: 14, fontWeight: 'bold', textTransform: 'uppercase' },
-    bizContactText: { fontSize: 10, marginTop: 2, fontWeight: '500' },
+    bizName: { fontSize: 13, fontWeight: 'bold', textTransform: 'uppercase', marginBottom: 2 },
+    bizAddress: { fontSize: 9, marginBottom: 2, opacity: 0.8 },
+    contactRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center' },
+    contactText: { fontSize: 9, fontWeight: '600', marginRight: 8 },
 
     // Buttons
     buttonSection: { marginTop: 25, paddingBottom: 30 },
